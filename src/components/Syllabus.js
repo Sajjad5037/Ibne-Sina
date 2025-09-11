@@ -7,7 +7,6 @@ export default function Syllabus() {
   const [pages, setPages] = useState([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  // Static PDF mapping
   const pdfMap = {
     Math: {
       Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [1, 2] },
@@ -35,19 +34,13 @@ export default function Syllabus() {
     }
   };
 
-  const prevPage = () => {
-    if (currentPageIndex > 0) setCurrentPageIndex(currentPageIndex - 1);
-  };
-
-  const nextPage = () => {
-    if (currentPageIndex < pages.length - 1) setCurrentPageIndex(currentPageIndex + 1);
-  };
+  const prevPage = () => currentPageIndex > 0 && setCurrentPageIndex(currentPageIndex - 1);
+  const nextPage = () => currentPageIndex < pages.length - 1 && setCurrentPageIndex(currentPageIndex + 1);
 
   return (
     <div className="h-screen w-screen flex flex-col">
       {/* Controls */}
-      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow">
-        {/* Subject */}
+      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Subject:</label>
           <select
@@ -61,8 +54,6 @@ export default function Syllabus() {
             <option value="Biology">Biology</option>
           </select>
         </div>
-
-        {/* Chapter */}
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Chapter:</label>
           <select
@@ -76,8 +67,6 @@ export default function Syllabus() {
             <option value="Chapter3">Chapter 3</option>
           </select>
         </div>
-
-        {/* Load PDF */}
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
@@ -97,12 +86,12 @@ export default function Syllabus() {
               src={`${pdfFile}#page=${pages[currentPageIndex]}`}
               width="100%"
               height="100%"
+              className="border-0 h-full w-full"
               title={`PDF Page ${pages[currentPageIndex]}`}
-              className="border-0"
             />
 
             {/* Navigation */}
-            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6">
+            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
               <button
                 onClick={prevPage}
                 disabled={currentPageIndex === 0}
