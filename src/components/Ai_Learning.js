@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { marked } from 'marked';
 
 
-const ChatbotTrainerUI_sociology = ({ doctorData }) => {
+const ChatbotTrainerUI = ({ doctorData }) => {
   
   const [pdfs, setPdfs] = useState([]);
   const [selectedPDFs, setSelectedPDFs] = useState([]);
@@ -11,10 +11,8 @@ const ChatbotTrainerUI_sociology = ({ doctorData }) => {
   const [images, setImages] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [sessionId, setSessionId] = React.useState(null);  // store sessionId in state
-  const [marks, setMarks] = useState(0);
-  const [question_text, setQuestionText] = useState("");
-  const [minimumWordCount, setMinimumWordCount] = useState(80);
-
+  const [showRightPanel, setShowRightPanel] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
 
   // File input ref
@@ -57,100 +55,53 @@ const ChatbotTrainerUI_sociology = ({ doctorData }) => {
   }
 
   try {
+    setIsLoading(true); 
     const formData = new FormData();
 
     // Append each image
-    images.forEach((img) => formData.append("images", img));
+    images.forEach((img) => {
+      formData.append("images", img); // Backend expects "images"
+    });
 
-    // Append other form data
-    formData.append("total_marks", marks);
-    formData.append("question_text", question_text);
-    formData.append("minimum_word_count", minimumWordCount);
+    // Append doctorData as JSON string
+    formData.append("doctorData", JSON.stringify(doctorData)); // Backend expects "doctorData" as a form field
 
-    console.log("[DEBUG] Sending form data:", formData);
+    // Optional: Set loading state here
+    // setIsLoading(true);
 
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/train-on-images-anz-way-new",
-      {
-        method: "POST",
-        body: formData,
-        // credentials: "include"  // uncomment if you use cookies
-      }
-    );
+    const response = await fetch("https://usefulapis-production.up.railway.app/train-on-images", {
+      method: "POST",
+      body: formData,
+    });
 
-    console.log("[DEBUG] Response received:", response);
-
-    // Check if the network request failed
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[DEBUG] Response not OK:", response.status, errorText);
       throw new Error(`Error ${response.status}: ${errorText}`);
     }
 
-    // Try parsing JSON
-    let result;
-    try {
-      result = await response.json();
-      console.log("[DEBUG] Parsed JSON result:", result);
-    } catch (jsonErr) {
-      const text = await response.text();
-      console.error("[DEBUG] Failed to parse JSON:", text);
-      throw new Error("Backend did not return valid JSON.");
-    }
+    const result = await response.json();
 
-    // Check status from backend
-    if (result.status !== "success") {
-      alert(`❌ Evaluation failed: ${result.detail || "No detail provided"}`);
-      return;
-    }
-
-    // Use evaluation_text from backend
-    const evaluationText = result.evaluation_text;
-
-    setChatLog((prev) => [
-      ...prev,
-      {
-        type: "bot",
-        message: (
-          <div>
-            <h3>Evaluation</h3>
-            <div
-              style={{
-                background: "#f8f8f8",
-                padding: "1em",
-                borderRadius: "6px",
-                whiteSpace: "pre-wrap",
-                fontFamily: "inherit",
-              }}
-              dangerouslySetInnerHTML={{
-                __html: evaluationText
-                  .replace(/\*\*\s*(.*?)\s*\*\*/g, "<strong>$1</strong>")
-                  .replace(/\n/g, "<br/>"),
-              }}
-            />
-          </div>
-        ),
-      },
-    ]);
-
-    // Show summary info
+    // Display summary result to user
     alert(`✅ Training successful!
-📝 Total Marks: ${result.total_marks}
-Minimum Word Count: ${result.minimum_word_count}
-Student Response Length: ${result.student_response.length} characters`);
+🆔 Session ID: ${result.session_id}
+🖼️ Images processed: ${result.images_processed}
+📝 Total text length: ${result.total_text_length}`);
+    setChatLog((prev) => [
+  ...prev,
+  { type: "bot", message: result.corrected_text },  // reply is already the HTML-formatted text
+]);
 
-    // Optional: store session ID if returned
-    if (result.session_id) {
-      setSessionId(result.session_id);
-    }
+    // Store session_id for future chat use
+    setSessionId(result.session_id);
+    setShowRightPanel(true);
 
   } catch (error) {
     console.error("❌ Error during training:", error);
-    alert(`Training failed. See console for details.`);
+    alert("Training failed. Please check your data and try again.");
+  } finally {
+    setIsLoading(false)
   }
 };
-
-
 
   const handleRemoveTraining = () => {
     alert("Previous training removed.");
@@ -164,7 +115,7 @@ Student Response Length: ${result.student_response.length} characters`);
   }
 
   try {
-    const response = await fetch("https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina", {
+    const response = await fetch("https://usefulapis-production.up.railway.app/chat_interactive_tutor", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -197,258 +148,230 @@ Student Response Length: ${result.student_response.length} characters`);
 
   return (
   <div
-    style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      padding: 20,
-      fontFamily: 'Arial, sans-serif',
-      gap: 20,
-    }}
-  >
+  style={{
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "stretch",   // stretch panels vertically
+    width: "100%",
+    minHeight: "70vh",      // ✅ always fill full viewport height
+    padding: 20,
+    gap: 20,
+    fontFamily: "Arial, sans-serif",
+    boxSizing: "border-box",
+    backgroundColor: "#f0f2f5",
+  }}
+>
     {/* Left Panel */}
     <div
       style={{
         width: 300,
         padding: 20,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: "#f9f9f9",
         borderRadius: 8,
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        height: 525,
-        display: 'flex',
-        flexDirection: 'column',
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
-      <h3 style={{ textAlign: 'center', color: '#333', marginBottom: 20 }}>
-        Upload Image of your response
+      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
+        Upload image of your creative writing and learn from AI
       </h3>
 
       <select
         multiple
-        size={10}
-        value={selectedImages.map(img => img.name)}
+        value={selectedImages.map((img) => img.name)}
         onChange={handleImageSelect}
         style={{
-          width: '100%',
-          height: 300,
+          flex: 1,
+          minHeight: 120,
+          width: "100%",
           padding: 10,
           marginBottom: 15,
           borderRadius: 5,
-          border: '1px solid #ccc',
-          flexShrink: 0,
-          boxSizing: 'border-box',
+          border: "1px solid #ccc",
+          boxSizing: "border-box",
         }}
       >
         {images.map((file, index) => (
-        <option key={index} value={file.name}>
+          <option key={index} value={file.name}>
             {file.name}
-        </option>
+          </option>
         ))}
       </select>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          marginTop: 'auto',
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <label
           htmlFor="fileInput"
           style={{
-            padding: '10px 20px',
-            backgroundColor: '#4CAF50',
-            color: '#fff',
+            padding: "10px 20px",
+            backgroundColor: "#4CAF50",
+            color: "#fff",
             borderRadius: 5,
-            cursor: 'pointer',
-            textAlign: 'center',
-            userSelect: 'none',
+            cursor: "pointer",
+            textAlign: "center",
+            userSelect: "none",
           }}
         >
           Upload Image
         </label>
-
         <input
           id="fileInput"
           type="file"
           accept="image/*"
           multiple
           onChange={handleFileChange}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
         />
-
         <button
           onClick={handleRemoveSelected}
           style={{
             padding: 10,
             borderRadius: 5,
-            color: '#fff',
-            backgroundColor: '#FF0000',
-            cursor: 'pointer',
-            border: 'none',
+            color: "#fff",
+            backgroundColor: "#FF0000",
+            cursor: "pointer",
+            border: "none",
           }}
         >
           Remove
         </button>
-
         <button
           onClick={handleTrain}
           style={{
             padding: 10,
             borderRadius: 5,
-            color: '#fff',
-            backgroundColor: '#4CAF50',
-            cursor: 'pointer',
-            border: 'none',
+            color: "#fff",
+            backgroundColor: "#4CAF50",
+            cursor: "pointer",
+            border: "none",
           }}
         >
           Send your essay for checking...
         </button>
+         {/* Loader / Processing Indicator */}
+        {isLoading && (
+          <div className="loader">
+            <img src="/spinner.gif" alt="Processing..." />
+            <p>Processing images, please wait...</p>
+          </div>
+        )}
       </div>
     </div>
 
     {/* Right Panel */}
     <div
-      style={{
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        height: 525,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Marks input on the left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <label htmlFor="marksInput" style={{ fontWeight: 'bold', color: '#333' }}>Marks:</label>
-            <input
-            id="marksInput"
-            type="number"
-            min={0}
-            style={{
-                width: 60,
-                padding: '5px 8px',
-                borderRadius: 4,
-                border: '1px solid #ccc',
-            }}
-            value={marks}
-            onChange={(e) => setMarks(Number(e.target.value))}
-            />
-        </div>
-        {/* Question input on the left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 10 }}>
-        <label htmlFor="questionInput" style={{ fontWeight: 'bold', color: '#333' }}>Question:</label>
-        <input
-            id="questionInput"
-            type="text"
-            placeholder="Enter your question here"
-            style={{
-            flex: 1,               // take remaining space
-            padding: '5px 8px',
-            borderRadius: 4,
-            border: '1px solid #ccc',
-            }}
-            value={question_text}
-            onChange={(e) => setQuestionText(e.target.value)}
-        />
-        </div>
-      
+  style={{
+    flex: 1,                 // ⬅️ take all remaining vertical space
+    padding: 20,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 0,            // ⬅️ important for inner scroll to work
+    boxSizing: "border-box",
+  }}
+>
+      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
+        Virtual Creative Writing Coach
+      </h3>
 
+      {/* Scrollable chat messages */}
       <div
         style={{
-          height: 450,
-          overflowY: 'auto',
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
           marginBottom: 15,
-          border: '1px solid #ddd',
+          border: "1px solid #ddd",
           padding: 15,
           borderRadius: 8,
-          backgroundColor: '#fff',
-          flexShrink: 0,
-          boxSizing: 'border-box',
+          backgroundColor: "#fff",
+          boxSizing: "border-box",
         }}
       >
         {chatLog.map((msg, index) => {
-  // Only call .replace if msg.message is a string
-  let cleanedMessage = msg.message;
-  if (msg.type === 'bot' && typeof msg.message === 'string') {
-    cleanedMessage = msg.message
-      .replace(/([^\.\?\!])\n/g, '$1 ') // Merge line breaks not after sentence endings
-      .replace(/\n/g, '<br>'); // Convert remaining line breaks to <br> tags
-  }
-
-  return (
-    <div
-      key={index}
-      style={{
-        marginBottom: 10,
-        textAlign: msg.type === 'user' ? 'right' : 'left',
-      }}
-    >
-      {msg.type === 'bot' ? (
-        typeof cleanedMessage === 'string' ? (
-          <div
-            style={{
-              display: 'block',
-              backgroundColor: '#f1f1f1',
-              padding: 10,
-              borderRadius: 10,
-              maxWidth: '90%',
-              wordWrap: 'break-word',
-              lineHeight: 1.6,
-            }}
-            dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
-          />
-        ) : (
-          // If cleanedMessage is not a string, render as React element
-          <div
-            style={{
-              display: 'block',
-              backgroundColor: '#f1f1f1',
-              padding: 10,
-              borderRadius: 10,
-              maxWidth: '90%',
-              wordWrap: 'break-word',
-              lineHeight: 1.6,
-            }}
-          >
-            {cleanedMessage}
-          </div>
-        )
-      ) : (
-        <div
-          style={{
-            display: 'inline-block',
-            backgroundColor: '#f1f1f1',
-            padding: 10,
-            borderRadius: 10,
-            maxWidth: '70%',
-            wordWrap: 'break-word',
-          }}
-        >
-          {cleanedMessage}
-        </div>
-      )}
-    </div>
-  );
-})}
-
+          const cleanedMessage =
+            msg.type === "bot"
+              ? msg.message.replace(/([^\.\?\!])\n/g, "$1 ").replace(/\n/g, "<br>")
+              : msg.message;
+          return (
+            <div
+              key={index}
+              style={{
+                marginBottom: 10,
+                textAlign: msg.type === "user" ? "right" : "left",
+              }}
+            >
+              {msg.type === "bot" ? (
+                <div
+                  style={{
+                    display: "block",
+                    backgroundColor: "#f1f1f1",
+                    padding: 10,
+                    borderRadius: 10,
+                    maxWidth: "90%",
+                    wordWrap: "break-word",
+                    lineHeight: 1.6,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "inline-block",
+                    backgroundColor: "#f1f1f1",
+                    padding: 10,
+                    borderRadius: 10,
+                    maxWidth: "70%",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  {cleanedMessage}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-        }}
-      >
-        
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <textarea
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Type your question...(suggest improvements in the essay)"
+          rows={3}
+          style={{
+            flex: 1,
+            padding: 10,
+            borderRadius: 5,
+            border: "1px solid #ccc",
+            resize: "vertical",
+            overflowY: "auto",
+            boxSizing: "border-box",
+          }}
+        />
+        <button
+          onClick={handleSendMessage}
+          style={{
+            padding: 10,
+            borderRadius: 5,
+            color: "#fff",
+            backgroundColor: "#2196F3",
+            cursor: "pointer",
+            border: "none",
+            minWidth: 80,
+          }}
+        >
+          Send
+        </button>
       </div>
     </div>
   </div>
 );
+
+
 };
 
-export default ChatbotTrainerUI_sociology;
+export default ChatbotTrainerUI;
