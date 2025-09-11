@@ -170,7 +170,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     justifyContent: "flex-start",
     alignItems: "stretch",   // stretch panels vertically
     width: "100%",
-    minHeight: "70vh",      // ✅ always fills full viewport height
+    minHeight: "100vh",      // ✅ always fills full viewport height
     padding: 20,
     gap: 20,
     fontFamily: "Arial, sans-serif",
