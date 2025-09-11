@@ -65,7 +65,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
         // Append each PDF
         files.forEach((pdf) => {
-            formData.append("pdfs", pdf); // 🔹 Change key if backend expects "pdfs"
+            formData.append("pdfs", pdf);
         });
 
         // Append doctorData as JSON string
@@ -79,7 +79,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             }
         );
 
-        // Try parsing JSON even if response is not ok
+        // Parse JSON response
         let result;
         try {
             result = await response.json();
@@ -100,9 +100,10 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 📄 PDFs processed: ${result.images_processed}
 📝 Total text length: ${result.total_text_length}`);
 
+        // Update chat log with prep_response
         setChatLog((prev) => [
             ...prev,
-            { type: "bot", message: result.corrected_text }, // reply is already formatted
+            { type: "bot", message: result.prep_response },
         ]);
 
         // Store session_id for future chat use
@@ -115,6 +116,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         setIsLoading(false);
     }
 };
+
 
   const handleRemoveTraining = () => {
     setFiles([]);           // Clear all uploaded PDFs
