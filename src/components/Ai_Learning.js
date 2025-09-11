@@ -63,9 +63,9 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         setIsLoading(true);
         const formData = new FormData();
 
-        // Append each PDF
+        // Append each PDF file
         files.forEach((pdf, index) => {
-            console.log(`📄 Appending file #${index + 1}: ${pdf.name} ${pdf.size} ${pdf.type}`);
+            console.log(`📄 Appending file #${index + 1}: ${pdf.name}, size: ${pdf.size}, type: ${pdf.type}`);
             formData.append("pdfs", pdf); // backend expects key "pdfs"
         });
 
@@ -76,14 +76,16 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         console.log("🧑‍⚕️ DoctorData to send:", doctorDataToSend);
         formData.append("doctorData", doctorDataToSend);
 
+        // Send request to backend
         const response = await fetch(
-            "https://usefulapis-production.up.railway.app/train-on-images-pdf-ibne-sina",
+            "https://usefulapis-production.up.railway.app/train-on-pdf-text-only",
             {
                 method: "POST",
                 body: formData,
             }
         );
 
+        // Parse JSON response
         let result;
         try {
             result = await response.json();
@@ -92,21 +94,25 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             throw new Error(`Failed to parse response JSON: ${text}`);
         }
 
+        // Handle errors returned by backend
         if (!response.ok || result.status === "error") {
             alert(result.message || `Training failed with status ${response.status}`);
             return;
         }
 
+        // Success alert
         alert(`✅ Training successful!
 🆔 Session ID: ${result.session_id}
-📄 PDFs processed: ${result.images_processed}
+📄 PDFs processed: ${result.images_processed || files.length}
 📝 Total text length: ${result.total_text_length}`);
 
+        // Update chat log with GPT prep_response
         setChatLog((prev) => [
             ...prev,
             { type: "bot", message: result.prep_response || "" },
         ]);
 
+        // Store session info
         setSessionId(result.session_id);
         setShowRightPanel(true);
 
