@@ -6,15 +6,15 @@ export default function Syllabus() {
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Mapping subject + chapter → images
+  // Static mapping: subject + chapter → image files
   const imageMap = {
     Math: {
       Chapter1: ["/page_1.png", "/page_2.png"],
       Chapter2: ["/page_3.png", "/page_4.png"],
     },
     Physics: {
-      Chapter1: ["/page_8.png"],
-      Chapter2: ["/page_9.png", "/page_10.png"],
+      Chapter1: ["/page_1.png"],
+      Chapter2: ["/page_2.png", "/page_3.png"],
     },
     Biology: {
       Chapter1: ["/page_5.png", "/page_6.png"],
@@ -22,7 +22,7 @@ export default function Syllabus() {
     },
   };
 
-  const handleLoadImages = () => {
+  const handleLoadPages = () => {
     if (subject && chapter && imageMap[subject]?.[chapter]) {
       setImages(imageMap[subject][chapter]);
       setCurrentIndex(0);
@@ -70,7 +70,7 @@ export default function Syllabus() {
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
-            onClick={handleLoadImages}
+            onClick={handleLoadPages}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
             Load Pages
@@ -78,14 +78,14 @@ export default function Syllabus() {
         </div>
       </div>
 
-      {/* PDF Page Image Viewer */}
-      <div className="relative flex-1 bg-gray-100 flex justify-center items-start overflow-auto">
+      {/* Image Viewer */}
+      <div className="relative flex-1 flex justify-center items-center bg-gray-50">
         {images.length > 0 ? (
           <>
             <img
               src={images[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
-              className="w-full max-w-screen"
+              className="max-w-full max-h-full object-contain"
             />
 
             {/* Navigation */}
