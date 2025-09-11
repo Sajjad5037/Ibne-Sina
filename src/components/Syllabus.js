@@ -8,32 +8,16 @@ export default function Syllabus() {
 
   const imageMap = {
     Math: {
-      Chapter1: [
-        "/page_1.png",
-        "/page_2.png"
-      ],
-      Chapter2: [
-        "/page_3.png",
-        "/page_4.png"
-      ],
+      Chapter1: ["/page_1.png", "/page_2.png"],
+      Chapter2: ["/page_3.png", "/page_4.png"],
     },
     Physics: {
-      Chapter1: [
-        "/page_1.png"
-      ],
-      Chapter2: [
-        "/page_2.png",
-        "/page_3.png"
-      ],
+      Chapter1: ["/page_1.png"],
+      Chapter2: ["/page_2.png", "/page_3.png"],
     },
     Biology: {
-      Chapter1: [
-        "/page_5.png",
-        "/page_6.png"
-      ],
-      Chapter3: [
-        "/page_7.png"
-      ],
+      Chapter1: ["/page_5.png", "/page_6.png"],
+      Chapter3: ["/page_7.png"],
     },
   };
 
@@ -98,7 +82,7 @@ export default function Syllabus() {
             <img
               src={images[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain transform scale-125"
+              className="w-full h-full object-contain transform scale-100"
             />
 
             {/* Navigation */}
