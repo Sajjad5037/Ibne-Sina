@@ -195,7 +195,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     }}
     >
     <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Upload PDF of your creative writing and learn from AI
+        Upload PDF of your lesson to educate the AI
     </h3>
 
     <select
@@ -267,7 +267,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             border: "none",
         }}
         >
-        Send your essay for checking...
+        Educate AI on your lesson
         </button>
         {/* Loader / Processing Indicator */}
         {isLoading && (
