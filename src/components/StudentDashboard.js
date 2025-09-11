@@ -90,7 +90,7 @@ const StudentDashboard = ({ doctorData }) => {
   return (
     <div style={styles.container}>
       {/* Header */}
-      <header style={styles.header}>ANZWAY --- Learning That Works!!!</header>
+      <header style={styles.header}>Ibne Sina College App!!!</header>
 
       {/* NavBar */}
       <nav style={styles.navBar}>
@@ -99,7 +99,7 @@ const StudentDashboard = ({ doctorData }) => {
           style={styles.navLink(activeLink === "ai_evaluator")}
           onClick={() => setActiveLink("ai_evaluator")}
         >
-          📝 AI Evaluator
+          📝 Syllabus
         </Link>
         <Link
           to="/StudentDashboard/ai_learning"
