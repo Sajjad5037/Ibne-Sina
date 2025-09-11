@@ -3,39 +3,42 @@ import { useState } from "react";
 export default function Syllabus() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-  const [pdfFile, setPdfFile] = useState("");
-  const [pages, setPages] = useState([]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [images, setImages] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const pdfMap = {
+  // Map subject + chapter → images
+  const imageMap = {
     Math: {
-      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [1, 2] },
-      Chapter2: { file: "/GRE-Verbal-Reasoning.pdf", pages: [3, 4] },
+      Chapter1: ["/page_1.png", "/page_2.png"],
+      Chapter2: ["/page_3.png", "/page_4.png"],
     },
     Physics: {
-      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [1] },
-      Chapter2: { file: "/GRE-Verbal-Reasoning.pdf", pages: [2, 3] },
+      Chapter1: ["/page_1.png"],
+      Chapter2: ["/page_2.png", "/page_3.png"],
     },
     Biology: {
-      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [5, 6] },
-      Chapter3: { file: "/GRE-Verbal-Reasoning.pdf", pages: [7] },
+      Chapter1: ["/page_5.png", "/page_6.png"],
+      Chapter3: ["/page_7.png"],
     },
   };
 
-  const handleLoadPdf = () => {
-    if (subject && chapter && pdfMap[subject]?.[chapter]) {
-      setPdfFile(pdfMap[subject][chapter].file);
-      setPages(pdfMap[subject][chapter].pages);
-      setCurrentPageIndex(0);
+  const handleLoadImages = () => {
+    if (subject && chapter && imageMap[subject]?.[chapter]) {
+      setImages(imageMap[subject][chapter]);
+      setCurrentIndex(0);
     } else {
-      setPdfFile("");
-      setPages([]);
-      setCurrentPageIndex(0);
+      setImages([]);
+      setCurrentIndex(0);
     }
   };
 
-  const prevPage = () => currentPageIndex > 0 && setCurrentPageIndex(currentPageIndex - 1);
-  const nextPage = () => currentPageIndex < pages.length - 1 && setCurrentPageIndex(currentPageIndex + 1);
+  const prevImage = () => {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  };
+
+  const nextImage = () => {
+    if (currentIndex < images.length - 1) setCurrentIndex(currentIndex + 1);
+  };
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -54,6 +57,7 @@ export default function Syllabus() {
             <option value="Biology">Biology</option>
           </select>
         </div>
+
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Chapter:</label>
           <select
@@ -67,52 +71,51 @@ export default function Syllabus() {
             <option value="Chapter3">Chapter 3</option>
           </select>
         </div>
+
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
-            onClick={handleLoadPdf}
+            onClick={handleLoadImages}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Load PDF
+            Load Pages
           </button>
         </div>
       </div>
 
-      {/* PDF Viewer */}
-      <div className="relative flex-1">
-        {pdfFile && pages.length > 0 ? (
+      {/* Image Carousel */}
+      <div className="relative flex-1 flex items-center justify-center bg-gray-200">
+        {images.length > 0 ? (
           <>
-            <iframe
-              src={`${pdfFile}#page=${pages[currentPageIndex]}`}
-              width="100%"
-              height="100%"
-              className="border-0 h-full w-full"
-              title={`PDF Page ${pages[currentPageIndex]}`}
+            <img
+              src={images[currentIndex]}
+              alt={`Page ${currentIndex + 1}`}
+              className="object-contain w-full h-full"
             />
 
             {/* Navigation */}
-            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
-              <button
-                onClick={prevPage}
-                disabled={currentPageIndex === 0}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ◀
-              </button>
-              <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
-                Page {currentPageIndex + 1} / {pages.length}
-              </span>
-              <button
-                onClick={nextPage}
-                disabled={currentPageIndex === pages.length - 1}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ▶
-              </button>
-            </div>
+            <button
+              onClick={prevImage}
+              disabled={currentIndex === 0}
+              className="absolute left-4 bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
+            >
+              ◀
+            </button>
+            <button
+              onClick={nextImage}
+              disabled={currentIndex === images.length - 1}
+              className="absolute right-4 bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
+            >
+              ▶
+            </button>
+
+            {/* Page indicator */}
+            <span className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
+              Page {currentIndex + 1} / {images.length}
+            </span>
           </>
         ) : (
-          <p className="text-gray-500 p-4">No PDF loaded yet.</p>
+          <p className="text-gray-500">No pages loaded yet.</p>
         )}
       </div>
     </div>
