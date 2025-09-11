@@ -87,12 +87,15 @@ export default function Syllabus() {
       <div className="relative flex-1 flex justify-center items-center bg-gray-50 overflow-hidden">
         {images.length > 0 ? (
           <>
-            <img
-              src={images[currentIndex]}
-              alt={`Page ${currentIndex + 1}`}
-              className="w-full h-full object-contain"
-            />
-
+            <div className="w-full h-full flex justify-center items-center">
+              <img
+                src={images[currentIndex]}
+                alt={`Page ${currentIndex + 1}`}
+                className="max-w-full max-h-full"
+                style={{ objectFit: "contain" }}
+              />
+            </div>
+      
             {/* Navigation */}
             <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
               <button
@@ -118,6 +121,7 @@ export default function Syllabus() {
           <p className="text-gray-500">No pages loaded yet.</p>
         )}
       </div>
+          
     </div>
   );
 }
