@@ -13,8 +13,8 @@ export default function Syllabus() {
       Chapter2: ["/page_3.png", "/page_4.png"],
     },
     Physics: {
-      Chapter1: ["/page_1.png"],
-      Chapter2: ["/page_2.png", "/page_3.png"],
+      Chapter1: ["/page_8.png"],
+      Chapter2: ["/page_9.png", "/page_10.png"],
     },
     Biology: {
       Chapter1: ["/page_5.png", "/page_6.png"],
