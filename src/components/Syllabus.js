@@ -82,7 +82,7 @@ export default function Syllabus() {
             <img
               src={images[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
-              className="w-full h-full object-contain transform scale-100"
+              className="w-full h-full object-contain transform scale-75"
             />
 
             {/* Navigation */}
