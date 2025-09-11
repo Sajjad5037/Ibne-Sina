@@ -3,27 +3,41 @@ import { useState } from "react";
 export default function Syllabus() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
+  const [className, setClassName] = useState(""); // renamed from topic
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const imageMap = {
     Math: {
-      Chapter1: ["/page_1.png", "/page_2.png"],
-      Chapter2: ["/page_3.png", "/page_4.png"],
+      Chapter1: {
+        ClassA: ["/page_1.png", "/page_2.png"],
+        ClassB: ["/page_3.png"]
+      },
+      Chapter2: {
+        ClassA: ["/page_4.png"],
+      },
     },
     Physics: {
-      Chapter1: ["/page_1.png"],
-      Chapter2: ["/page_2.png", "/page_3.png"],
+      Chapter1: {
+        ClassA: ["/page_1.png"],
+      },
+      Chapter2: {
+        ClassB: ["/page_2.png", "/page_3.png"],
+      },
     },
     Biology: {
-      Chapter1: ["/page_5.png", "/page_6.png"],
-      Chapter3: ["/page_7.png"],
+      Chapter1: {
+        ClassA: ["/page_5.png", "/page_6.png"],
+      },
+      Chapter3: {
+        ClassC: ["/page_7.png"],
+      },
     },
   };
 
   const handleLoadPages = () => {
-    if (subject && chapter && imageMap[subject]?.[chapter]) {
-      setImages(imageMap[subject][chapter]);
+    if (subject && chapter && className && imageMap[subject]?.[chapter]?.[className]) {
+      setImages(imageMap[subject][chapter][className]);
       setCurrentIndex(0);
     } else {
       setImages([]);
@@ -38,6 +52,7 @@ export default function Syllabus() {
     <div className="h-screen w-screen flex flex-col">
       {/* Controls */}
       <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
+        {/* Subject */}
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Subject:</label>
           <select
@@ -51,6 +66,8 @@ export default function Syllabus() {
             <option value="Biology">Biology</option>
           </select>
         </div>
+
+        {/* Chapter */}
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Chapter:</label>
           <select
@@ -64,6 +81,23 @@ export default function Syllabus() {
             <option value="Chapter3">Chapter 3</option>
           </select>
         </div>
+
+        {/* Class */}
+        <div className="flex flex-col">
+          <label className="font-medium text-gray-700 mb-1">Class:</label>
+          <select
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2"
+          >
+            <option value="">Select class</option>
+            <option value="ClassA">Class A</option>
+            <option value="ClassB">Class B</option>
+            <option value="ClassC">Class C</option>
+          </select>
+        </div>
+
+        {/* Load Pages Button */}
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
