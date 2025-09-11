@@ -153,7 +153,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     justifyContent: "flex-start",
     alignItems: "stretch",   // stretch panels vertically
     width: "100%",
-    minHeight: "70vh",      // ✅ always fill full viewport height
+    minHeight: "100vh",      // ✅ always fill full viewport height
     padding: 20,
     gap: 20,
     fontFamily: "Arial, sans-serif",
@@ -247,7 +247,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             border: "none",
           }}
         >
-          Send your essay for checking...
+          Train AI on your images
         </button>
          {/* Loader / Processing Indicator */}
         {isLoading && (
