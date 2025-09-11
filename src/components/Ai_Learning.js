@@ -63,12 +63,16 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         setIsLoading(true);
         const formData = new FormData();
 
+        console.log("📄 Files to upload:", files);
+
         // Append each PDF
-        files.forEach((pdf) => {
-            formData.append("pdfs", pdf);
+        files.forEach((pdf, index) => {
+            console.log(`Appending file #${index + 1}:`, pdf.name, pdf.size, pdf.type);
+            formData.append("pdfs", pdf); // Ensure key matches backend
         });
 
         // Append doctorData as JSON string
+        console.log("DoctorData to send:", doctorData);
         formData.append("doctorData", JSON.stringify(doctorData));
 
         const response = await fetch(
@@ -79,7 +83,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             }
         );
 
-        // Parse JSON response
+        // Attempt to parse JSON response
         let result;
         try {
             result = await response.json();
@@ -90,6 +94,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
         // Handle backend-defined errors
         if (!response.ok || result.status === "error") {
+            console.error("❌ Backend error response:", result);
             alert(result.message || `Training failed with status ${response.status}`);
             return;
         }
@@ -100,10 +105,9 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 📄 PDFs processed: ${result.images_processed}
 📝 Total text length: ${result.total_text_length}`);
 
-        // Update chat log with prep_response
         setChatLog((prev) => [
             ...prev,
-            { type: "bot", message: result.prep_response },
+            { type: "bot", message: result.prep_response || result.corrected_text }, // Use correct field
         ]);
 
         // Store session_id for future chat use
@@ -116,6 +120,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         setIsLoading(false);
     }
 };
+
 
 
   const handleRemoveTraining = () => {
