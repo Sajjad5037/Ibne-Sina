@@ -265,7 +265,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             border: "none",
         }}
         >
-        Send your essay for checking...
+        Train AI on your pdf
         </button>
         {/* Loader / Processing Indicator */}
         {isLoading && (
