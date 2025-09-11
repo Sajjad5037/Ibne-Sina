@@ -4,7 +4,10 @@ import { marked } from "marked";
 
 const Ai_Learning = ({ doctorData }) => {
   const [subject, setSubject] = useState("");
-  const [marks, setMarks] = useState("");
+  
+  const [chapter, setChapter] = useState("");
+  const [chapterOptions, setChapterOptions] = useState([]);
+
   const [question_text, setQuestionText] = useState("");
   const [chatLog, setChatLog] = useState([]);
   const [userInput, setUserInput] = useState("");
@@ -16,10 +19,18 @@ const Ai_Learning = ({ doctorData }) => {
 
 
   useEffect(() => {
-    setQuestionText("");
-  }, [marks]);
-
-
+    const fetchChapters = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/chapters"); // adjust API
+        const data = await res.json();
+        setChapterOptions(data.chapters || []); // expect { chapters: ["Ch1","Ch2",...] }
+      } catch (err) {
+        console.error("Error fetching chapters:", err);
+      }
+    };
+  
+    fetchChapters();
+  }, []);
 
   const questionsByMarks = {
   4: [
@@ -277,29 +288,34 @@ const Ai_Learning = ({ doctorData }) => {
           </select>
         </div>
       
-        {/* Marks Input */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <label
-            htmlFor="marksInput"
-            style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}
-          >
-            Marks:
-          </label>
-          <input
-            id="marksInput"
-            type="number"
-            value={marks}
-            onChange={(e) => setMarks(Number(e.target.value))}
-            placeholder="e.g. 6, 10, 20"
-            style={{
-              width: 80,
-              padding: "5px 8px",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-            }}
-          />
-        </div>
-      
+       {/* Chapter Dropdown */}
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <label
+          htmlFor="chapterSelect"
+          style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}
+        >
+          Chapter
+        </label>
+        <select
+          id="chapterSelect"
+          value={marks}
+          onChange={(e) => setMarks(Number(e.target.value))}
+          style={{
+            width: 100,
+            padding: "5px 8px",
+            borderRadius: 4,
+            border: "1px solid #ccc",
+          }}
+        >
+          <option value="">Select Chapter</option>
+          {marksOptions.map((option, idx) => (
+            <option key={idx} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
         {/* Question Dropdown + Button */}
         <div
           style={{
