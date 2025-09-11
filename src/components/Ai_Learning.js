@@ -1,424 +1,395 @@
-import React, { useState, useEffect } from "react";
-import { marked } from "marked";
+import React, { useState } from 'react';
+import { marked } from 'marked';
 
 
-const Ai_Learning = ({ doctorData }) => {
-  const [subject, setSubject] = useState("");
+const ChatbotTrainerUI = ({ doctorData }) => {
   
-  const [chapter, setChapter] = useState("");
-  const [chapterOptions, setChapterOptions] = useState([]);
-
-  const [question_text, setQuestionText] = useState("");
+  const [pdfs, setPdfs] = useState([]);
+  const [selectedPDFs, setSelectedPDFs] = useState([]);
   const [chatLog, setChatLog] = useState([]);
   const [userInput, setUserInput] = useState("");
-  const [sessionId, setSessionId] = useState(null);
-  const isDisabled = !doctorData || doctorData.id == null || !sessionId;
-  const [isStartingConversation, setIsStartingConversation] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-
-
-
-  useEffect(() => {
-    const fetchChapters = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/chapters"); // adjust API
-        const data = await res.json();
-        setChapterOptions(data.chapters || []); // expect { chapters: ["Ch1","Ch2",...] }
-      } catch (err) {
-        console.error("Error fetching chapters:", err);
-      }
-    };
-  
-    fetchChapters();
-  }, []);
-
+  const [images, setImages] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [sessionId, setSessionId] = React.useState(null);  // store sessionId in state
+  const [showRightPanel, setShowRightPanel] = useState(false);
+  const [files, setFiles] = useState([]); // <-- define files state here
+  const [selectedFiles, setSelectedFiles] = useState([]); // initialize as empty array
+  const [isLoading, setIsLoading] = useState(false);
   
 
-  const handleRefresh = () => {
-    // Reset all input fields and chat state
-    setSubject("");
-    
-    setQuestionText("");
-    setUserInput("");
-    setChatLog([]);
-    setSessionId(null);           // clears the current session
-    setIsStartingConversation(false);
-  
-    console.log("[DEBUG] All inputs and chat cleared. Ready for a new session.");
-  };
 
-  const handleSend = async () => {
-  // Ignore empty input
-  if (!userInput.trim()) return;
 
-  // Validate session
-  if (!sessionId) {
-    console.warn("[WARN] No sessionId available. Please start a conversation first.");
-    alert("Please start a conversation first!");
+  // File input ref
+  const handleFileChange = (e) => {
+  const selectedFiles = Array.from(e.target.files);
+
+  if (selectedFiles.length + files.length > 10) {
+    alert('You can only upload up to 10 PDFs.');
     return;
   }
 
-  // Validate doctor data
-  if (!doctorData || !doctorData.id || !doctorData.name) {
-    console.error("[ERROR] doctorData missing required fields:", doctorData);
-    alert("Doctor information not loaded properly. Please reload the page.");
-    return;
-  }
-
-  const payload = {
-    session_id: sessionId,
-    message: userInput,
-    id: doctorData.id,
-    username: doctorData.name,
-    subject: subject,  // ✅ added subject
-  };
-
-  console.log("[DEBUG] Sending message payload:", JSON.stringify(payload, null, 2));
-
-  try {
-    setIsSending(true); // start button loading state
-
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/send_message_anz_way_model_evaluation",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    console.log("[DEBUG] Raw response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[ERROR] Server returned error:", errorText);
-      throw new Error("Server error");
+  setFiles((prev) => [...prev, ...selectedFiles]);
+};
+  const handleFileSelect = (event) => {
+    const options = event.target.options;
+    const selectedNames = [];
+    for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) selectedNames.push(options[i].value);
     }
 
-    const data = await response.json();
-    console.log("[DEBUG] Backend reply received:", data);
+    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
+    };
+  const handlePDFSelect = (e) => {
+    const selectedNames = Array.from(e.target.selectedOptions).map(opt => opt.value);
+    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
+    };
 
-    // Update chat log
+
+  const handleRemoveSelected = () => {
+    setFiles(prevFiles =>
+        prevFiles.filter(file => !selectedPDFs.some(sel => sel.name === file.name))
+    );
+    setSelectedPDFs([]);
+    };
+
+
+  const handleTrain = async () => {
+    if (files.length === 0) {
+        alert("Please upload at least one PDF before training.");
+        return;
+    }
+
+    try {
+        setIsLoading(true);
+        const formData = new FormData();
+
+        // Append each PDF
+        files.forEach((pdf) => {
+            formData.append("pdfs", pdf); // 🔹 Change key if backend expects "pdfs"
+        });
+
+        // Append doctorData as JSON string
+        formData.append("doctorData", JSON.stringify(doctorData));
+
+        const response = await fetch(
+            "https://usefulapis-production.up.railway.app/train-on-images-pdf",
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+
+        // Try parsing JSON even if response is not ok
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            throw new Error(`Failed to parse response JSON: ${text}`);
+        }
+
+        // Handle backend-defined errors
+        if (!response.ok || result.status === "error") {
+            alert(result.message || `Training failed with status ${response.status}`);
+            return;
+        }
+
+        // Success: display summary to user
+        alert(`✅ Training successful!
+🆔 Session ID: ${result.session_id}
+📄 PDFs processed: ${result.images_processed}
+📝 Total text length: ${result.total_text_length}`);
+
+        setChatLog((prev) => [
+            ...prev,
+            { type: "bot", message: result.corrected_text }, // reply is already formatted
+        ]);
+
+        // Store session_id for future chat use
+        setSessionId(result.session_id);
+        setShowRightPanel(true);
+    } catch (error) {
+        console.error("❌ Error during training:", error);
+        alert(error.message || "Training failed. Please check your data and try again.");
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+  const handleRemoveTraining = () => {
+    setFiles([]);           // Clear all uploaded PDFs
+    setSelectedPDFs([]);    // Clear selected PDFs
+    setSessionId(null);     // Reset session if needed
+    alert("✅ Previous PDF training removed.");
+    };
+
+
+  const handleSendMessage = async () => {
+  if (!userInput.trim()) return;
+  if (!sessionId) {
+    alert("Please train first to get a session ID.");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://usefulapis-production.up.railway.app/chat_interactive_tutor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: sessionId,
+        message: userInput,
+        first_message: chatLog.length === 0,
+      }),
+    });
+
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+    const data = await response.json();
+
     setChatLog((prev) => [
       ...prev,
-      { sender: "user", text: userInput },
-      { sender: "bot", text: data.reply || "No response from server" },
+      { type: "user", message: userInput },
+      { type: "bot", message: data.reply },  // reply is already the HTML-formatted text
     ]);
 
-    setUserInput(""); // clear input after sending
+    setUserInput("");
   } catch (error) {
-    console.error("[ERROR] handleSend failed:", error);
-    alert("⚠️ Failed to get response from the tutor.");
-  } finally {
-    setIsSending(false); // reset button state
+    console.error(error);
+    alert("Failed to get response from the tutor.");
   }
 };
 
-
-  
-  const handleStartConversation = async () => {
-  console.log("[DEBUG] Starting conversation with values:", {
-    username: doctorData.name,
-    subject,
-    chapter,
-    question_text,
-  });
-
-  // Validate required fields
-  if (!subject || !chapter || !question_text) {
-    alert("Please fill all fields before starting the conversation!");
-    return;
-  }
-
-  try {
-    // Indicate loading state if needed
-    setIsStartingConversation(true);
-
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/chat_anz_way_model_evaluation",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject,
-          chapter,
-          question_text,
-          username: doctorData.name,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Backend error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log("[DEBUG] Conversation response:", data);
-
-    // Save session ID if returned
-    if (data.session_id) setSessionId(data.session_id);
-
-    // Initialize chat log with bot response
-    setChatLog([
-      {
-        sender: "bot",
-        text: data.reply || "No response from server",
-      },
-    ]);
-  } catch (error) {
-    console.error("Error starting conversation:", error);
-    setChatLog([
-      {
-        sender: "bot",
-        text: "⚠️ Failed to reach server. Please try again later.",
-      },
-    ]);
-  } finally {
-    setIsStartingConversation(false); // Reset loading state
-  }
-};
-
+  const handleShowContext = () => {
+    alert("Show current training context (stub)");
+  };
 
   return (
+  <div
+  style={{
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "stretch",   // stretch panels vertically
+    width: "100%",
+    minHeight: "70vh",      // ✅ always fills full viewport height
+    padding: 20,
+    gap: 20,
+    fontFamily: "Arial, sans-serif",
+    boxSizing: "border-box",
+    backgroundColor: "#f0f2f5",
+  }}
+>
+
+    {/* Left Panel */}
     <div
-      style={{
-        padding: "20px 0",          // ✅ vertical only, no left/right padding
-        fontFamily: "Arial, sans-serif",
-        width: "100%",              // ✅ take full width
-        maxWidth: "100%",           // ✅ ignore previous 1200px limit
-        margin: 0,                  // ✅ no auto-centering
+    style={{
+        width: 300,
+        padding: 20,
+        backgroundColor: "#f9f9f9",
+        borderRadius: 8,
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        display: "flex",
+        flexDirection: "column",
         boxSizing: "border-box",
-      }}
+    }}
     >
+    <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
+        Upload PDF of your creative writing and learn from AI
+    </h3>
 
-      {/* ----------------- Your Given Section (kept intact) ----------------- */}
-      <div
+    <select
+        multiple
+        value={selectedFiles.map((file) => file.name)}
+        onChange={handleFileSelect}
         style={{
-          display: "flex",
-          flexWrap: "wrap",     // ✅ allow items to move to next line if needed
-          alignItems: "center",
-          gap: 20,
-          marginBottom: "12px",
+        flex: 1,
+        minHeight: 120,
+        width: "100%",
+        padding: 10,
+        marginBottom: 15,
+        borderRadius: 5,
+        border: "1px solid #ccc",
+        boxSizing: "border-box",
         }}
-      >
+    >
+        {files.map((file, index) => (
+        <option key={index} value={file.name}>
+            {file.name}
+        </option>
+        ))}
+    </select>
 
-        {/* Subject Dropdown */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <label
-            htmlFor="subjectSelect"
-            style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}
-          >
-            Subject:
-          </label>
-          <select
-            id="subjectSelect"
-            style={{
-              padding: "6px 10px",
-              borderRadius: 6,
-              border: "1px solid #ccc",
-              minWidth: 160,
-            }}
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          >
-            <option value="">-- Select Subject --</option>
-            <option value="sociology">Sociology</option>
-            <option value="economics">Economics</option>
-            <option value="history">History</option>
-            <option value="political_science">Political Science</option>
-            <option value="literature">Literature</option>
-          </select>
-        </div>
-      
-       {/* Chapter Dropdown */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <label
-          htmlFor="chapterSelect"
-          style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}
+        htmlFor="fileInput"
+        style={{
+            padding: "10px 20px",
+            backgroundColor: "#4CAF50",
+            color: "#fff",
+            borderRadius: 5,
+            cursor: "pointer",
+            textAlign: "center",
+            userSelect: "none",
+        }}
         >
-          Chapter
+        Upload PDF
         </label>
-        <select
-          id="chapterSelect"
-          value={chapter}
-          onChange={(e) => setChapter(e.target.value)}
-          style={{
-            width: 100,
-            padding: "5px 8px",
-            borderRadius: 4,
-            border: "1px solid #ccc",
-          }}
+        <input
+        id="fileInput"
+        type="file"
+        accept="application/pdf"
+        multiple
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+        />
+        <button
+        onClick={handleRemoveSelected}
+        style={{
+            padding: 10,
+            borderRadius: 5,
+            color: "#fff",
+            backgroundColor: "#FF0000",
+            cursor: "pointer",
+            border: "none",
+        }}
         >
-          <option value="">Select Chapter</option>
-          {chapterOptions.map((option, idx) => (
-            <option key={idx} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </div>
-
-        {/* Question Dropdown + Button */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-end",
-            flex: 1,
-            gap: "10px",
-          }}
+        Remove
+        </button>
+        <button
+        onClick={handleTrain}
+        style={{
+            padding: 10,
+            borderRadius: 5,
+            color: "#fff",
+            backgroundColor: "#4CAF50",
+            cursor: "pointer",
+            border: "none",
+        }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label
-              htmlFor="chapterSelect"
-              style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}
-            >
-              Chapter
-            </label>
-            <select
-              id="chapterSelect"
-              value={chapter}
-              onChange={(e) => setChapter(e.target.value)}
-              style={{
-                width: 120,
-                padding: "5px 8px",
-                borderRadius: 4,
-                border: "1px solid #ccc",
-              }}
-            >
-              <option value="">Select chapter</option>
-              <option value="Chapter1">Chapter 1</option>
-              <option value="Chapter2">Chapter 2</option>
-              <option value="Chapter3">Chapter 3</option>
-            </select>
-          </div>
+        Send your essay for checking...
+        </button>
+        {/* Loader / Processing Indicator */}
+        {isLoading && (
+            <div className="loader">
+            <img src="/spinner.gif" alt="Processing..." />
+            <p>Processing images, please wait...</p>
+            </div>
+        )}
+    </div>
+    </div>
 
-      
-          {/* Start Conversation Button */}
-          <button
-            onClick={handleStartConversation}
-            disabled={isStartingConversation} // new state to track processing
-            style={{
-              padding: "8px 16px",
-              borderRadius: 6,
-              border: "none",
-              background: isStartingConversation ? "#007bff" : "#4CAF50", // optional color change
-              color: "white",
-              fontWeight: "600",
-              cursor: isStartingConversation ? "not-allowed" : "pointer",
-              height: "fit-content",
-              marginBottom: "2px",
-            }}
-          >
-            {isStartingConversation ? "Starting Conversation..." : "Start Conversation"}
-          </button>
-          <button
-            onClick={handleRefresh}
-            style={{
-              padding: "8px 16px",
-              borderRadius: 6,
-              border: "none",
-              background: "#2196F3", // blue color for refresh
-              color: "white",
-              fontWeight: "600",
-              cursor: "pointer",
-              height: "fit-content",
-              marginBottom: "2px",
-            }}
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
+    {/* Right Panel */}
+    <div
+  style={{
+    flex: 1,                 // ⬅️ take all remaining vertical space
+    padding: 20,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 0,            // ⬅️ important for inner scroll to work
+    boxSizing: "border-box",
+  }}
+>
+      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
+        Virtual Creative Writing Coach
+      </h3>
 
-      {/* ----------------- Chatbot Section ----------------- */}
+      {/* Scrollable chat messages */}
       <div
         style={{
-          height: "70vh",         // use 70% of viewport height instead of fixed px
-          maxHeight: "600px",     // optional: don’t let it grow too tall
-          minHeight: "300px",     // optional: keep it usable on small screens
+          flex: 1,
+          minHeight: 0,
           overflowY: "auto",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          padding: "12px",
+          marginBottom: 15,
+          border: "1px solid #ddd",
+          padding: 15,
+          borderRadius: 8,
+          backgroundColor: "#fff",
+          boxSizing: "border-box",
         }}
       >
-
-        {/* Chat messages */}
-        <div style={{ flex: 1, overflowY: "auto", marginBottom: 10 }}>
-          {chatLog.map((msg, idx) => (
+        {chatLog.map((msg, index) => {
+          const cleanedMessage =
+            msg.type === "bot"
+              ? msg.message.replace(/([^\.\?\!])\n/g, "$1 ").replace(/\n/g, "<br>")
+              : msg.message;
+          return (
             <div
-              key={idx}
+              key={index}
               style={{
-                textAlign: msg.sender === "user" ? "right" : "left",
-                margin: "5px 0",
+                marginBottom: 10,
+                textAlign: msg.type === "user" ? "right" : "left",
               }}
             >
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "6px 10px",
-                  borderRadius: 12,
-                  background: msg.sender === "user" ? "#007bff" : "#f1f1f1",
-                  color: msg.sender === "user" ? "white" : "black",
-                }}
-                dangerouslySetInnerHTML={{ __html: marked.parse(msg.text) }}
-              />
+              {msg.type === "bot" ? (
+                <div
+                  style={{
+                    display: "block",
+                    backgroundColor: "#f1f1f1",
+                    padding: 10,
+                    borderRadius: 10,
+                    maxWidth: "90%",
+                    wordWrap: "break-word",
+                    lineHeight: 1.6,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "inline-block",
+                    backgroundColor: "#f1f1f1",
+                    padding: 10,
+                    borderRadius: 10,
+                    maxWidth: "70%",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  {cleanedMessage}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Input box */}
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <textarea
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Type your message..."
-            rows={1}
-            style={{
-              flex: 1,
-              padding: "8px 10px",
-              borderRadius: 6,
-              border: "1px solid #ccc",
-              resize: "none",        // user cannot manually resize
-              overflow: "hidden",    // hide scrollbars
-              fontFamily: "inherit",
-              fontSize: "14px",
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault(); // prevent newline
-                handleSend();
-              }
-            }}
-            onInput={(e) => {
-              e.target.style.height = "auto";
-              e.target.style.height = e.target.scrollHeight + "px"; // auto-expand
-            }}
-            onPaste={(e) => e.preventDefault()}  // prevent pasting
-            onCopy={(e) => e.preventDefault()}   // prevent copying
-          />
-          <button
-            onClick={handleSend}
-            disabled={isSending} // new state to track sending
-            style={{
-              padding: "8px 16px",
-              borderRadius: 6,
-              border: "none",
-              background: isSending ? "#007bff" : "#007bff", // color can stay same or change slightly
-              color: "white",
-              fontWeight: "600",
-              cursor: isSending ? "not-allowed" : "pointer",
-            }}
-          >
-            {isSending ? "Sending..." : "Send"}
-          </button>
-        </div>
-
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <textarea
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Type your question...(suggest improvements in the essay)"
+          rows={3}
+          style={{
+            flex: 1,
+            padding: 10,
+            borderRadius: 5,
+            border: "1px solid #ccc",
+            resize: "vertical",
+            overflowY: "auto",
+            boxSizing: "border-box",
+          }}
+        />
+        <button
+          onClick={handleSendMessage}
+          style={{
+            padding: 10,
+            borderRadius: 5,
+            color: "#fff",
+            backgroundColor: "#2196F3",
+            cursor: "pointer",
+            border: "none",
+            minWidth: 80,
+          }}
+        >
+          Send
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
+
+
 };
 
-export default Ai_Learning;
+export default ChatbotTrainerUI;
