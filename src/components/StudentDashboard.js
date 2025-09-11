@@ -95,9 +95,9 @@ const StudentDashboard = ({ doctorData }) => {
       {/* NavBar */}
       <nav style={styles.navBar}>
         <Link
-          to="/StudentDashboard/ai_evaluator"
-          style={styles.navLink(activeLink === "ai_evaluator")}
-          onClick={() => setActiveLink("ai_evaluator")}
+          to="/StudentDashboard/Syllabus"
+          style={styles.navLink(activeLink === "Syllabus")}
+          onClick={() => setActiveLink("Syllabus")}
         >
           📝 Syllabus
         </Link>
