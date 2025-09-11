@@ -296,7 +296,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   }}
 >
       <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Virtual Creative Writing Coach
+        Virtual AI Tutor
       </h3>
 
       {/* Scrollable chat messages */}
