@@ -6,7 +6,7 @@ export default function Syllabus() {
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Map subject + chapter → images
+  // Mapping subject + chapter → images
   const imageMap = {
     Math: {
       Chapter1: ["/page_1.png", "/page_2.png"],
@@ -32,13 +32,10 @@ export default function Syllabus() {
     }
   };
 
-  const prevImage = () => {
-    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
-  };
-
-  const nextImage = () => {
-    if (currentIndex < images.length - 1) setCurrentIndex(currentIndex + 1);
-  };
+  const prevPage = () =>
+    currentIndex > 0 && setCurrentIndex((prev) => prev - 1);
+  const nextPage = () =>
+    currentIndex < images.length - 1 && setCurrentIndex((prev) => prev + 1);
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -57,7 +54,6 @@ export default function Syllabus() {
             <option value="Biology">Biology</option>
           </select>
         </div>
-
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Chapter:</label>
           <select
@@ -71,7 +67,6 @@ export default function Syllabus() {
             <option value="Chapter3">Chapter 3</option>
           </select>
         </div>
-
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
@@ -83,39 +78,39 @@ export default function Syllabus() {
         </div>
       </div>
 
-      {/* Image Carousel */}
-      <div className="relative flex-1 flex items-center justify-center bg-gray-200">
+      {/* PDF Page Image Viewer */}
+      <div className="relative flex-1 bg-gray-100 flex justify-center items-start overflow-auto">
         {images.length > 0 ? (
           <>
             <img
               src={images[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
-              className="object-contain w-full h-full"
+              className="w-full max-w-screen"
             />
 
             {/* Navigation */}
-            <button
-              onClick={prevImage}
-              disabled={currentIndex === 0}
-              className="absolute left-4 bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
-            >
-              ◀
-            </button>
-            <button
-              onClick={nextImage}
-              disabled={currentIndex === images.length - 1}
-              className="absolute right-4 bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
-            >
-              ▶
-            </button>
-
-            {/* Page indicator */}
-            <span className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded">
-              Page {currentIndex + 1} / {images.length}
-            </span>
+            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
+              <button
+                onClick={prevPage}
+                disabled={currentIndex === 0}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                ◀
+              </button>
+              <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
+                Page {currentIndex + 1} / {images.length}
+              </span>
+              <button
+                onClick={nextPage}
+                disabled={currentIndex === images.length - 1}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                ▶
+              </button>
+            </div>
           </>
         ) : (
-          <p className="text-gray-500">No pages loaded yet.</p>
+          <p className="text-gray-500 p-4">No pages loaded yet.</p>
         )}
       </div>
     </div>
