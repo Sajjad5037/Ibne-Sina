@@ -84,43 +84,41 @@ export default function Syllabus() {
       </div>
 
       {/* Image Viewer */}
-      <div className="relative flex-1 flex justify-center items-center bg-gray-50 overflow-hidden">
-        {images.length > 0 ? (
-          <>
-            <div className="w-full h-full flex justify-center items-center">
-              <img
-                src={images[currentIndex]}
-                alt={`Page ${currentIndex + 1}`}
-                className="max-w-full max-h-full"
-                style={{ objectFit: "contain" }}
-              />
-            </div>
-      
-            {/* Navigation */}
-            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
-              <button
-                onClick={prevPage}
-                disabled={currentIndex === 0}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ◀
-              </button>
-              <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
-                Page {currentIndex + 1} / {images.length}
-              </span>
-              <button
-                onClick={nextPage}
-                disabled={currentIndex === images.length - 1}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ▶
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="text-gray-500">No pages loaded yet.</p>
-        )}
+      <div className="relative w-screen h-screen bg-gray-50 flex justify-center items-center overflow-hidden">
+  {images.length > 0 ? (
+    <>
+      <img
+        src={images[currentIndex]}
+        alt={`Page ${currentIndex + 1}`}
+        className="w-full h-full object-contain"
+      />
+
+      {/* Navigation */}
+      <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-4 transform -translate-y-1/2">
+        <button
+          onClick={prevPage}
+          disabled={currentIndex === 0}
+          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+        >
+          ◀
+        </button>
+        <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
+          Page {currentIndex + 1} / {images.length}
+        </span>
+        <button
+          onClick={nextPage}
+          disabled={currentIndex === images.length - 1}
+          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+        >
+          ▶
+        </button>
       </div>
+    </>
+  ) : (
+    <p className="text-gray-500">No pages loaded yet.</p>
+  )}
+</div>
+
           
     </div>
   );
