@@ -1,85 +1,120 @@
 import { useState } from "react";
+import { Document, Page } from "react-pdf";
 
 export default function Syllabus() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-  const [images, setImages] = useState([]);
+  const [pdfPages, setPdfPages] = useState([]);
 
-  const handleFetchImages = async () => {
-    // Example: call backend API with subject & chapter
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/images?subject=${subject}&chapter=${chapter}`
-      );
-      const data = await res.json();
-      setImages(data.images || []);
-    } catch (err) {
-      console.error("Error fetching images", err);
+  // Static PDF mapping (subject + chapter → file + pages)
+  const pdfMap = {
+    Math: {
+      Chapter1: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [1, 2],
+      },
+      Chapter2: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [3, 4],
+      },
+    },
+    Physics: {
+      Chapter1: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [1],
+      },
+      Chapter2: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [2, 3],
+      },
+    },
+    Biology: {
+      Chapter1: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [5, 6],
+      },
+      Chapter3: {
+        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        pages: [7],
+      },
+    },
+  };
+
+  const handleFetchPdf = () => {
+    if (subject && chapter && pdfMap[subject]?.[chapter]) {
+      setPdfPages(pdfMap[subject][chapter]);
+    } else {
+      setPdfPages([]);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-      {/* Subject */}
-      <div className="flex items-center gap-3 mb-4">
-        <label htmlFor="subject" className="font-medium text-gray-700">
-          Subject:
-        </label>
-        <select
-          id="subject"
-          className="border border-gray-300 rounded-md px-3 py-2 flex-1"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        >
-          <option value="">Select subject</option>
-          <option value="Math">Math</option>
-          <option value="Physics">Physics</option>
-          <option value="Biology">Biology</option>
-        </select>
+    <div className="max-w-3xl mx-auto p-6">
+      {/* Controls Row */}
+      <div className="flex items-end gap-4 mb-6">
+        {/* Subject */}
+        <div className="flex flex-col">
+          <label htmlFor="subject" className="font-medium text-gray-700 mb-1">
+            Subject:
+          </label>
+          <select
+            id="subject"
+            className="border border-gray-300 rounded-md px-3 py-2"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          >
+            <option value="">Select subject</option>
+            <option value="Math">Math</option>
+            <option value="Physics">Physics</option>
+            <option value="Biology">Biology</option>
+          </select>
+        </div>
+
+        {/* Chapter */}
+        <div className="flex flex-col">
+          <label htmlFor="chapter" className="font-medium text-gray-700 mb-1">
+            Chapter:
+          </label>
+          <select
+            id="chapter"
+            className="border border-gray-300 rounded-md px-3 py-2"
+            value={chapter}
+            onChange={(e) => setChapter(e.target.value)}
+          >
+            <option value="">Select chapter</option>
+            <option value="Chapter1">Chapter 1</option>
+            <option value="Chapter2">Chapter 2</option>
+            <option value="Chapter3">Chapter 3</option>
+          </select>
+        </div>
+
+        {/* Load PDFs Button */}
+        <div className="flex flex-col">
+          <label className="invisible mb-1">Load</label>
+          <button
+            onClick={handleFetchPdf}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Load Pages
+          </button>
+        </div>
       </div>
 
-      {/* Chapter */}
-      <div className="mb-4">
-        <label
-          htmlFor="chapter"
-          className="block mb-2 font-medium text-gray-700"
-        >
-          Chapter:
-        </label>
-        <select
-          id="chapter"
-          className="border border-gray-300 rounded-md px-3 py-2 w-full"
-          value={chapter}
-          onChange={(e) => setChapter(e.target.value)}
-        >
-          <option value="">Select chapter</option>
-          <option value="Chapter1">Chapter 1</option>
-          <option value="Chapter2">Chapter 2</option>
-          <option value="Chapter3">Chapter 3</option>
-        </select>
-      </div>
-
-      {/* Button to fetch images */}
-      <button
-        onClick={handleFetchImages}
-        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-      >
-        Load Images
-      </button>
-
-      {/* Images container */}
-      <div className="mt-6 grid grid-cols-2 gap-4">
-        {images.length > 0 ? (
-          images.map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt={`related-${idx}`}
-              className="rounded-lg border shadow"
-            />
-          ))
+      {/* PDF Pages container */}
+      <div className="mt-6 grid grid-cols-1 gap-6">
+        {pdfPages.file ? (
+          <Document file={pdfPages.file}>
+            {pdfPages.pages.map((p) => (
+              <Page
+                key={p}
+                pageNumber={p}
+                width={400}
+                className="rounded-lg border shadow"
+              />
+            ))}
+          </Document>
         ) : (
-          <p className="text-gray-500 col-span-2">No images loaded yet.</p>
+          <p className="text-gray-500 col-span-2">No PDF loaded yet.</p>
         )}
       </div>
     </div>
