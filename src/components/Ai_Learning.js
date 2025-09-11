@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { marked } from 'marked';
 
 
-const ChatbotTrainerUI = ({ doctorData }) => {
+const ChatbotTrainerUI_sociology = ({ doctorData }) => {
   
   const [pdfs, setPdfs] = useState([]);
   const [selectedPDFs, setSelectedPDFs] = useState([]);
@@ -11,118 +11,150 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [images, setImages] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [sessionId, setSessionId] = React.useState(null);  // store sessionId in state
-  const [showRightPanel, setShowRightPanel] = useState(false);
-  const [files, setFiles] = useState([]); // <-- define files state here
-  const [selectedFiles, setSelectedFiles] = useState([]); // initialize as empty array
-  const [isLoading, setIsLoading] = useState(false);
-  
+  const [marks, setMarks] = useState(0);
+  const [question_text, setQuestionText] = useState("");
+  const [minimumWordCount, setMinimumWordCount] = useState(80);
 
 
 
   // File input ref
   const handleFileChange = (e) => {
-  const selectedFiles = Array.from(e.target.files);
+    const selectedFiles = Array.from(e.target.files);
 
-  if (selectedFiles.length + files.length > 10) {
-    alert('You can only upload up to 10 PDFs.');
-    return;
-  }
+    if (selectedFiles.length + images.length > 10) {
+      alert('You can only upload up to 10 images.');
+      return;
+    }
 
-  setFiles((prev) => [...prev, ...selectedFiles]);
-};
-  const handleFileSelect = (event) => {
+    setImages(prev => [...prev, ...selectedFiles]);
+  };
+  const handleImageSelect = (event) => {
     const options = event.target.options;
     const selectedNames = [];
     for (let i = 0; i < options.length; i++) {
-        if (options[i].selected) selectedNames.push(options[i].value);
+      if (options[i].selected) selectedNames.push(options[i].value);
     }
 
-    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
-    };
-  const handlePDFSelect = (e) => {
-    const selectedNames = Array.from(e.target.selectedOptions).map(opt => opt.value);
-    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
-    };
+    setSelectedImages(images.filter(img => selectedNames.includes(img.name)));
+  };
 
+  const handlePDFSelect = (e) => {
+    const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+    setSelectedPDFs(selected);
+  };
 
   const handleRemoveSelected = () => {
-    setFiles(prevFiles =>
-        prevFiles.filter(file => !selectedPDFs.some(sel => sel.name === file.name))
+    setImages(prevImages =>
+        prevImages.filter(img => !selectedImages.some(sel => sel.name === img.name))
     );
-    setSelectedPDFs([]);
+    setSelectedImages([]);
     };
-
 
   const handleTrain = async () => {
-    if (files.length === 0) {
-        alert("Please upload at least one PDF before training.");
-        return;
+  if (images.length === 0) {
+    alert("Please upload at least one image before training.");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+
+    // Append each image
+    images.forEach((img) => formData.append("images", img));
+
+    // Append other form data
+    formData.append("total_marks", marks);
+    formData.append("question_text", question_text);
+    formData.append("minimum_word_count", minimumWordCount);
+
+    console.log("[DEBUG] Sending form data:", formData);
+
+    const response = await fetch(
+      "https://usefulapis-production.up.railway.app/train-on-images-anz-way-new",
+      {
+        method: "POST",
+        body: formData,
+        // credentials: "include"  // uncomment if you use cookies
+      }
+    );
+
+    console.log("[DEBUG] Response received:", response);
+
+    // Check if the network request failed
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[DEBUG] Response not OK:", response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText}`);
     }
 
+    // Try parsing JSON
+    let result;
     try {
-        setIsLoading(true);
-        const formData = new FormData();
-
-        // Append each PDF
-        files.forEach((pdf) => {
-            formData.append("pdfs", pdf); // 🔹 Change key if backend expects "pdfs"
-        });
-
-        // Append doctorData as JSON string
-        formData.append("doctorData", JSON.stringify(doctorData));
-
-        const response = await fetch(
-            "https://usefulapis-production.up.railway.app/train-on-images-pdf",
-            {
-                method: "POST",
-                body: formData,
-            }
-        );
-
-        // Try parsing JSON even if response is not ok
-        let result;
-        try {
-            result = await response.json();
-        } catch (e) {
-            const text = await response.text();
-            throw new Error(`Failed to parse response JSON: ${text}`);
-        }
-
-        // Handle backend-defined errors
-        if (!response.ok || result.status === "error") {
-            alert(result.message || `Training failed with status ${response.status}`);
-            return;
-        }
-
-        // Success: display summary to user
-        alert(`✅ Training successful!
-🆔 Session ID: ${result.session_id}
-📄 PDFs processed: ${result.images_processed}
-📝 Total text length: ${result.total_text_length}`);
-
-        setChatLog((prev) => [
-            ...prev,
-            { type: "bot", message: result.corrected_text }, // reply is already formatted
-        ]);
-
-        // Store session_id for future chat use
-        setSessionId(result.session_id);
-        setShowRightPanel(true);
-    } catch (error) {
-        console.error("❌ Error during training:", error);
-        alert(error.message || "Training failed. Please check your data and try again.");
-    } finally {
-        setIsLoading(false);
+      result = await response.json();
+      console.log("[DEBUG] Parsed JSON result:", result);
+    } catch (jsonErr) {
+      const text = await response.text();
+      console.error("[DEBUG] Failed to parse JSON:", text);
+      throw new Error("Backend did not return valid JSON.");
     }
+
+    // Check status from backend
+    if (result.status !== "success") {
+      alert(`❌ Evaluation failed: ${result.detail || "No detail provided"}`);
+      return;
+    }
+
+    // Use evaluation_text from backend
+    const evaluationText = result.evaluation_text;
+
+    setChatLog((prev) => [
+      ...prev,
+      {
+        type: "bot",
+        message: (
+          <div>
+            <h3>Evaluation</h3>
+            <div
+              style={{
+                background: "#f8f8f8",
+                padding: "1em",
+                borderRadius: "6px",
+                whiteSpace: "pre-wrap",
+                fontFamily: "inherit",
+              }}
+              dangerouslySetInnerHTML={{
+                __html: evaluationText
+                  .replace(/\*\*\s*(.*?)\s*\*\*/g, "<strong>$1</strong>")
+                  .replace(/\n/g, "<br/>"),
+              }}
+            />
+          </div>
+        ),
+      },
+    ]);
+
+    // Show summary info
+    alert(`✅ Training successful!
+📝 Total Marks: ${result.total_marks}
+Minimum Word Count: ${result.minimum_word_count}
+Student Response Length: ${result.student_response.length} characters`);
+
+    // Optional: store session ID if returned
+    if (result.session_id) {
+      setSessionId(result.session_id);
+    }
+
+  } catch (error) {
+    console.error("❌ Error during training:", error);
+    alert(`Training failed. See console for details.`);
+  }
 };
 
-  const handleRemoveTraining = () => {
-    setFiles([]);           // Clear all uploaded PDFs
-    setSelectedPDFs([]);    // Clear selected PDFs
-    setSessionId(null);     // Reset session if needed
-    alert("✅ Previous PDF training removed.");
-    };
 
+
+  const handleRemoveTraining = () => {
+    alert("Previous training removed.");
+  };
 
   const handleSendMessage = async () => {
   if (!userInput.trim()) return;
@@ -165,231 +197,258 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
   return (
   <div
-  style={{
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "stretch",   // stretch panels vertically
-    width: "100%",
-    minHeight: "100vh",      // ✅ always fills full viewport height
-    padding: 20,
-    gap: 20,
-    fontFamily: "Arial, sans-serif",
-    boxSizing: "border-box",
-    backgroundColor: "#f0f2f5",
-  }}
->
-
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      padding: 20,
+      fontFamily: 'Arial, sans-serif',
+      gap: 20,
+    }}
+  >
     {/* Left Panel */}
     <div
-    style={{
+      style={{
         width: 300,
         padding: 20,
-        backgroundColor: "#f9f9f9",
+        backgroundColor: '#f9f9f9',
         borderRadius: 8,
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-    }}
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+        height: 525,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
-    <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Upload PDF of your creative writing and learn from AI
-    </h3>
+      <h3 style={{ textAlign: 'center', color: '#333', marginBottom: 20 }}>
+        Upload Image of your response
+      </h3>
 
-    <select
+      <select
         multiple
-        value={selectedFiles.map((file) => file.name)}
-        onChange={handleFileSelect}
+        size={10}
+        value={selectedImages.map(img => img.name)}
+        onChange={handleImageSelect}
         style={{
-        flex: 1,
-        minHeight: 120,
-        width: "100%",
-        padding: 10,
-        marginBottom: 15,
-        borderRadius: 5,
-        border: "1px solid #ccc",
-        boxSizing: "border-box",
+          width: '100%',
+          height: 300,
+          padding: 10,
+          marginBottom: 15,
+          borderRadius: 5,
+          border: '1px solid #ccc',
+          flexShrink: 0,
+          boxSizing: 'border-box',
         }}
-    >
-        {files.map((file, index) => (
+      >
+        {images.map((file, index) => (
         <option key={index} value={file.name}>
             {file.name}
         </option>
         ))}
-    </select>
+      </select>
 
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          marginTop: 'auto',
+        }}
+      >
         <label
-        htmlFor="fileInput"
-        style={{
-            padding: "10px 20px",
-            backgroundColor: "#4CAF50",
-            color: "#fff",
+          htmlFor="fileInput"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: '#fff',
             borderRadius: 5,
-            cursor: "pointer",
-            textAlign: "center",
-            userSelect: "none",
-        }}
+            cursor: 'pointer',
+            textAlign: 'center',
+            userSelect: 'none',
+          }}
         >
-        Upload PDF
+          Upload Image
         </label>
+
         <input
-        id="fileInput"
-        type="file"
-        accept="application/pdf"
-        multiple
-        onChange={handleFileChange}
-        style={{ display: "none" }}
+          id="fileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
         />
+
         <button
-        onClick={handleRemoveSelected}
-        style={{
+          onClick={handleRemoveSelected}
+          style={{
             padding: 10,
             borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#FF0000",
-            cursor: "pointer",
-            border: "none",
-        }}
+            color: '#fff',
+            backgroundColor: '#FF0000',
+            cursor: 'pointer',
+            border: 'none',
+          }}
         >
-        Remove
+          Remove
         </button>
+
         <button
-        onClick={handleTrain}
-        style={{
+          onClick={handleTrain}
+          style={{
             padding: 10,
             borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#4CAF50",
-            cursor: "pointer",
-            border: "none",
-        }}
+            color: '#fff',
+            backgroundColor: '#4CAF50',
+            cursor: 'pointer',
+            border: 'none',
+          }}
         >
-        Train AI on your pdf
+          Send your essay for checking...
         </button>
-        {/* Loader / Processing Indicator */}
-        {isLoading && (
-            <div className="loader">
-            <img src="/spinner.gif" alt="Processing..." />
-            <p>Processing images, please wait...</p>
-            </div>
-        )}
-    </div>
+      </div>
     </div>
 
     {/* Right Panel */}
     <div
-  style={{
-    flex: 1,                 // ⬅️ take all remaining vertical space
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-    display: "flex",
-    flexDirection: "column",
-    minHeight: 0,            // ⬅️ important for inner scroll to work
-    boxSizing: "border-box",
-  }}
->
-      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Virtual Creative Writing Coach
-      </h3>
+      style={{
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+        height: 525,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Marks input on the left */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <label htmlFor="marksInput" style={{ fontWeight: 'bold', color: '#333' }}>Marks:</label>
+            <input
+            id="marksInput"
+            type="number"
+            min={0}
+            style={{
+                width: 60,
+                padding: '5px 8px',
+                borderRadius: 4,
+                border: '1px solid #ccc',
+            }}
+            value={marks}
+            onChange={(e) => setMarks(Number(e.target.value))}
+            />
+        </div>
+        {/* Question input on the left */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 10 }}>
+        <label htmlFor="questionInput" style={{ fontWeight: 'bold', color: '#333' }}>Question:</label>
+        <input
+            id="questionInput"
+            type="text"
+            placeholder="Enter your question here"
+            style={{
+            flex: 1,               // take remaining space
+            padding: '5px 8px',
+            borderRadius: 4,
+            border: '1px solid #ccc',
+            }}
+            value={question_text}
+            onChange={(e) => setQuestionText(e.target.value)}
+        />
+        </div>
+      
 
-      {/* Scrollable chat messages */}
       <div
         style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
+          height: 450,
+          overflowY: 'auto',
           marginBottom: 15,
-          border: "1px solid #ddd",
+          border: '1px solid #ddd',
           padding: 15,
           borderRadius: 8,
-          backgroundColor: "#fff",
-          boxSizing: "border-box",
+          backgroundColor: '#fff',
+          flexShrink: 0,
+          boxSizing: 'border-box',
         }}
       >
         {chatLog.map((msg, index) => {
-          const cleanedMessage =
-            msg.type === "bot"
-              ? msg.message.replace(/([^\.\?\!])\n/g, "$1 ").replace(/\n/g, "<br>")
-              : msg.message;
-          return (
-            <div
-              key={index}
-              style={{
-                marginBottom: 10,
-                textAlign: msg.type === "user" ? "right" : "left",
-              }}
-            >
-              {msg.type === "bot" ? (
-                <div
-                  style={{
-                    display: "block",
-                    backgroundColor: "#f1f1f1",
-                    padding: 10,
-                    borderRadius: 10,
-                    maxWidth: "90%",
-                    wordWrap: "break-word",
-                    lineHeight: 1.6,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
-                />
-              ) : (
-                <div
-                  style={{
-                    display: "inline-block",
-                    backgroundColor: "#f1f1f1",
-                    padding: 10,
-                    borderRadius: 10,
-                    maxWidth: "70%",
-                    wordWrap: "break-word",
-                  }}
-                >
-                  {cleanedMessage}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+  // Only call .replace if msg.message is a string
+  let cleanedMessage = msg.message;
+  if (msg.type === 'bot' && typeof msg.message === 'string') {
+    cleanedMessage = msg.message
+      .replace(/([^\.\?\!])\n/g, '$1 ') // Merge line breaks not after sentence endings
+      .replace(/\n/g, '<br>'); // Convert remaining line breaks to <br> tags
+  }
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <textarea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Type your question...(suggest improvements in the essay)"
-          rows={3}
+  return (
+    <div
+      key={index}
+      style={{
+        marginBottom: 10,
+        textAlign: msg.type === 'user' ? 'right' : 'left',
+      }}
+    >
+      {msg.type === 'bot' ? (
+        typeof cleanedMessage === 'string' ? (
+          <div
+            style={{
+              display: 'block',
+              backgroundColor: '#f1f1f1',
+              padding: 10,
+              borderRadius: 10,
+              maxWidth: '90%',
+              wordWrap: 'break-word',
+              lineHeight: 1.6,
+            }}
+            dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
+          />
+        ) : (
+          // If cleanedMessage is not a string, render as React element
+          <div
+            style={{
+              display: 'block',
+              backgroundColor: '#f1f1f1',
+              padding: 10,
+              borderRadius: 10,
+              maxWidth: '90%',
+              wordWrap: 'break-word',
+              lineHeight: 1.6,
+            }}
+          >
+            {cleanedMessage}
+          </div>
+        )
+      ) : (
+        <div
           style={{
-            flex: 1,
+            display: 'inline-block',
+            backgroundColor: '#f1f1f1',
             padding: 10,
-            borderRadius: 5,
-            border: "1px solid #ccc",
-            resize: "vertical",
-            overflowY: "auto",
-            boxSizing: "border-box",
-          }}
-        />
-        <button
-          onClick={handleSendMessage}
-          style={{
-            padding: 10,
-            borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#2196F3",
-            cursor: "pointer",
-            border: "none",
-            minWidth: 80,
+            borderRadius: 10,
+            maxWidth: '70%',
+            wordWrap: 'break-word',
           }}
         >
-          Send
-        </button>
+          {cleanedMessage}
+        </div>
+      )}
+    </div>
+  );
+})}
+
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        
       </div>
     </div>
   </div>
 );
-
-
 };
 
-export default ChatbotTrainerUI;
+export default ChatbotTrainerUI_sociology;
