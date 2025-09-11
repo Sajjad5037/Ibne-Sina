@@ -10,31 +10,31 @@ export default function Syllabus() {
   const pdfMap = {
     Math: {
       Chapter1: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [1, 2],
       },
       Chapter2: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [3, 4],
       },
     },
     Physics: {
       Chapter1: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [1],
       },
       Chapter2: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [2, 3],
       },
     },
     Biology: {
       Chapter1: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [5, 6],
       },
       Chapter3: {
-        file: "https://www.learnedguys.com/uploads/files/223/NEW%20MATHS%20BOOK%202.pdf",
+        file: "/GRE-Verbal-Reasoning.pdf",
         pages: [7],
       },
     },
