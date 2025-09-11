@@ -12,100 +12,117 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [sessionId, setSessionId] = React.useState(null);  // store sessionId in state
   const [showRightPanel, setShowRightPanel] = useState(false);
+  const [files, setFiles] = useState([]); // <-- define files state here
+  const [selectedFiles, setSelectedFiles] = useState([]); // initialize as empty array
   const [isLoading, setIsLoading] = useState(false);
+  
+
 
 
   // File input ref
   const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
+  const selectedFiles = Array.from(e.target.files);
 
-    if (selectedFiles.length + images.length > 10) {
-      alert('You can only upload up to 10 images.');
-      return;
-    }
-
-    setImages(prev => [...prev, ...selectedFiles]);
-  };
-  const handleImageSelect = (event) => {
-    const options = event.target.options;
-    const selectedNames = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) selectedNames.push(options[i].value);
-    }
-
-    setSelectedImages(images.filter(img => selectedNames.includes(img.name)));
-  };
-
-  const handlePDFSelect = (e) => {
-    const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
-    setSelectedPDFs(selected);
-  };
-
-  const handleRemoveSelected = () => {
-    setImages(prevImages =>
-        prevImages.filter(img => !selectedImages.some(sel => sel.name === img.name))
-    );
-    setSelectedImages([]);
-    };
-
-  const handleTrain = async () => {
-  if (images.length === 0) {
-    alert("Please upload at least one image before training.");
+  if (selectedFiles.length + files.length > 10) {
+    alert('You can only upload up to 10 PDFs.');
     return;
   }
 
-  try {
-    setIsLoading(true); 
-    const formData = new FormData();
-
-    // Append each image
-    images.forEach((img) => {
-      formData.append("images", img); // Backend expects "images"
-    });
-
-    // Append doctorData as JSON string
-    formData.append("doctorData", JSON.stringify(doctorData)); // Backend expects "doctorData" as a form field
-
-    // Optional: Set loading state here
-    // setIsLoading(true);
-
-    const response = await fetch("https://usefulapis-production.up.railway.app/train-on-images", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error ${response.status}: ${errorText}`);
+  setFiles((prev) => [...prev, ...selectedFiles]);
+};
+  const handleFileSelect = (event) => {
+    const options = event.target.options;
+    const selectedNames = [];
+    for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) selectedNames.push(options[i].value);
     }
 
-    const result = await response.json();
+    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
+    };
+  const handlePDFSelect = (e) => {
+    const selectedNames = Array.from(e.target.selectedOptions).map(opt => opt.value);
+    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
+    };
 
-    // Display summary result to user
-    alert(`✅ Training successful!
+
+  const handleRemoveSelected = () => {
+    setFiles(prevFiles =>
+        prevFiles.filter(file => !selectedPDFs.some(sel => sel.name === file.name))
+    );
+    setSelectedPDFs([]);
+    };
+
+
+  const handleTrain = async () => {
+    if (files.length === 0) {
+        alert("Please upload at least one PDF before training.");
+        return;
+    }
+
+    try {
+        setIsLoading(true);
+        const formData = new FormData();
+
+        // Append each PDF
+        files.forEach((pdf) => {
+            formData.append("pdfs", pdf); // 🔹 Change key if backend expects "pdfs"
+        });
+
+        // Append doctorData as JSON string
+        formData.append("doctorData", JSON.stringify(doctorData));
+
+        const response = await fetch(
+            "https://usefulapis-production.up.railway.app/train-on-images-pdf-ibne-sina",
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+
+        // Try parsing JSON even if response is not ok
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            throw new Error(`Failed to parse response JSON: ${text}`);
+        }
+
+        // Handle backend-defined errors
+        if (!response.ok || result.status === "error") {
+            alert(result.message || `Training failed with status ${response.status}`);
+            return;
+        }
+
+        // Success: display summary to user
+        alert(`✅ Training successful!
 🆔 Session ID: ${result.session_id}
-🖼️ Images processed: ${result.images_processed}
+📄 PDFs processed: ${result.images_processed}
 📝 Total text length: ${result.total_text_length}`);
-    setChatLog((prev) => [
-  ...prev,
-  { type: "bot", message: result.corrected_text },  // reply is already the HTML-formatted text
-]);
 
-    // Store session_id for future chat use
-    setSessionId(result.session_id);
-    setShowRightPanel(true);
+        setChatLog((prev) => [
+            ...prev,
+            { type: "bot", message: result.corrected_text }, // reply is already formatted
+        ]);
 
-  } catch (error) {
-    console.error("❌ Error during training:", error);
-    alert("Training failed. Please check your data and try again.");
-  } finally {
-    setIsLoading(false)
-  }
+        // Store session_id for future chat use
+        setSessionId(result.session_id);
+        setShowRightPanel(true);
+    } catch (error) {
+        console.error("❌ Error during training:", error);
+        alert(error.message || "Training failed. Please check your data and try again.");
+    } finally {
+        setIsLoading(false);
+    }
 };
 
   const handleRemoveTraining = () => {
-    alert("Previous training removed.");
-  };
+    setFiles([]);           // Clear all uploaded PDFs
+    setSelectedPDFs([]);    // Clear selected PDFs
+    setSessionId(null);     // Reset session if needed
+    alert("✅ Previous PDF training removed.");
+    };
+
 
   const handleSendMessage = async () => {
   if (!userInput.trim()) return;
@@ -153,7 +170,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     justifyContent: "flex-start",
     alignItems: "stretch",   // stretch panels vertically
     width: "100%",
-    minHeight: "100vh",      // ✅ always fill full viewport height
+    minHeight: "70vh",      // ✅ always fills full viewport height
     padding: 20,
     gap: 20,
     fontFamily: "Arial, sans-serif",
@@ -161,9 +178,10 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     backgroundColor: "#f0f2f5",
   }}
 >
+
     {/* Left Panel */}
     <div
-      style={{
+    style={{
         width: 300,
         padding: 20,
         backgroundColor: "#f9f9f9",
@@ -172,38 +190,38 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
-      }}
+    }}
     >
-      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Upload image of your creative writing and learn from AI
-      </h3>
+    <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
+        Upload PDF of your creative writing and learn from AI
+    </h3>
 
-      <select
+    <select
         multiple
-        value={selectedImages.map((img) => img.name)}
-        onChange={handleImageSelect}
+        value={selectedFiles.map((file) => file.name)}
+        onChange={handleFileSelect}
         style={{
-          flex: 1,
-          minHeight: 120,
-          width: "100%",
-          padding: 10,
-          marginBottom: 15,
-          borderRadius: 5,
-          border: "1px solid #ccc",
-          boxSizing: "border-box",
+        flex: 1,
+        minHeight: 120,
+        width: "100%",
+        padding: 10,
+        marginBottom: 15,
+        borderRadius: 5,
+        border: "1px solid #ccc",
+        boxSizing: "border-box",
         }}
-      >
-        {images.map((file, index) => (
-          <option key={index} value={file.name}>
+    >
+        {files.map((file, index) => (
+        <option key={index} value={file.name}>
             {file.name}
-          </option>
+        </option>
         ))}
-      </select>
+    </select>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <label
-          htmlFor="fileInput"
-          style={{
+        htmlFor="fileInput"
+        style={{
             padding: "10px 20px",
             backgroundColor: "#4CAF50",
             color: "#fff",
@@ -211,52 +229,52 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             cursor: "pointer",
             textAlign: "center",
             userSelect: "none",
-          }}
+        }}
         >
-          Upload Image
+        Upload PDF
         </label>
         <input
-          id="fileInput"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFileChange}
-          style={{ display: "none" }}
+        id="fileInput"
+        type="file"
+        accept="application/pdf"
+        multiple
+        onChange={handleFileChange}
+        style={{ display: "none" }}
         />
         <button
-          onClick={handleRemoveSelected}
-          style={{
+        onClick={handleRemoveSelected}
+        style={{
             padding: 10,
             borderRadius: 5,
             color: "#fff",
             backgroundColor: "#FF0000",
             cursor: "pointer",
             border: "none",
-          }}
+        }}
         >
-          Remove
+        Remove
         </button>
         <button
-          onClick={handleTrain}
-          style={{
+        onClick={handleTrain}
+        style={{
             padding: 10,
             borderRadius: 5,
             color: "#fff",
             backgroundColor: "#4CAF50",
             cursor: "pointer",
             border: "none",
-          }}
+        }}
         >
-          Train AI on your images
+        Send your essay for checking...
         </button>
-         {/* Loader / Processing Indicator */}
+        {/* Loader / Processing Indicator */}
         {isLoading && (
-          <div className="loader">
+            <div className="loader">
             <img src="/spinner.gif" alt="Processing..." />
             <p>Processing images, please wait...</p>
-          </div>
+            </div>
         )}
-      </div>
+    </div>
     </div>
 
     {/* Right Panel */}
