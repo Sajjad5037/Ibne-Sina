@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Document, Page } from "react-pdf";
 
 export default function Syllabus() {
   const [subject, setSubject] = useState("");
@@ -9,34 +8,16 @@ export default function Syllabus() {
   // Static PDF mapping (subject + chapter → file + pages)
   const pdfMap = {
     Math: {
-      Chapter1: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [1, 2],
-      },
-      Chapter2: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [3, 4],
-      },
+      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [1, 2] },
+      Chapter2: { file: "/GRE-Verbal-Reasoning.pdf", pages: [3, 4] },
     },
     Physics: {
-      Chapter1: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [1],
-      },
-      Chapter2: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [2, 3],
-      },
+      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [1] },
+      Chapter2: { file: "/GRE-Verbal-Reasoning.pdf", pages: [2, 3] },
     },
     Biology: {
-      Chapter1: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [5, 6],
-      },
-      Chapter3: {
-        file: "/GRE-Verbal-Reasoning.pdf",
-        pages: [7],
-      },
+      Chapter1: { file: "/GRE-Verbal-Reasoning.pdf", pages: [5, 6] },
+      Chapter3: { file: "/GRE-Verbal-Reasoning.pdf", pages: [7] },
     },
   };
 
@@ -102,19 +83,19 @@ export default function Syllabus() {
 
       {/* PDF Pages container */}
       <div className="mt-6 grid grid-cols-1 gap-6">
-        {pdfPages.file ? (
-          <Document file={pdfPages.file}>
-            {pdfPages.pages.map((p) => (
-              <Page
-                key={p}
-                pageNumber={p}
-                width={400}
-                className="rounded-lg border shadow"
-              />
-            ))}
-          </Document>
+        {pdfPages.file && pdfPages.pages.length > 0 ? (
+          pdfPages.pages.map((p) => (
+            <iframe
+              key={p}
+              src={`${pdfPages.file}#page=${p}`}
+              width="100%"
+              height="600px"
+              title={`PDF Page ${p}`}
+              className="border rounded shadow"
+            />
+          ))
         ) : (
-          <p className="text-gray-500 col-span-2">No PDF loaded yet.</p>
+          <p className="text-gray-500">No PDF loaded yet.</p>
         )}
       </div>
     </div>
