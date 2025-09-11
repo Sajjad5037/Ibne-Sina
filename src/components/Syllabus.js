@@ -6,7 +6,7 @@ export default function Syllabus() {
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Static mapping: subject + chapter → image files
+  // Static mapping: subject → chapter → images
   const imageMap = {
     Math: {
       Chapter1: ["/page_1.png", "/page_2.png"],
@@ -22,7 +22,7 @@ export default function Syllabus() {
     },
   };
 
-  const handleLoadPages = () => {
+  const handleLoadImages = () => {
     if (subject && chapter && imageMap[subject]?.[chapter]) {
       setImages(imageMap[subject][chapter]);
       setCurrentIndex(0);
@@ -32,15 +32,18 @@ export default function Syllabus() {
     }
   };
 
-  const prevPage = () =>
-    currentIndex > 0 && setCurrentIndex((prev) => prev - 1);
-  const nextPage = () =>
-    currentIndex < images.length - 1 && setCurrentIndex((prev) => prev + 1);
+  const prevPage = () => {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  };
+
+  const nextPage = () => {
+    if (currentIndex < images.length - 1) setCurrentIndex(currentIndex + 1);
+  };
 
   return (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="h-screen w-screen flex flex-col bg-gray-100">
       {/* Controls */}
-      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
+      <div className="flex items-end gap-4 p-4 bg-gray-200 shadow z-10">
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Subject:</label>
           <select
@@ -54,6 +57,7 @@ export default function Syllabus() {
             <option value="Biology">Biology</option>
           </select>
         </div>
+
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Chapter:</label>
           <select
@@ -67,10 +71,11 @@ export default function Syllabus() {
             <option value="Chapter3">Chapter 3</option>
           </select>
         </div>
+
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
-            onClick={handleLoadPages}
+            onClick={handleLoadImages}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
             Load Pages
@@ -79,13 +84,13 @@ export default function Syllabus() {
       </div>
 
       {/* Image Viewer */}
-      <div className="relative flex-1 flex justify-center items-center bg-gray-50">
+      <div className="relative flex-1 flex justify-center items-center bg-gray-50 overflow-hidden">
         {images.length > 0 ? (
           <>
             <img
               src={images[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-full object-contain"
             />
 
             {/* Navigation */}
@@ -110,7 +115,7 @@ export default function Syllabus() {
             </div>
           </>
         ) : (
-          <p className="text-gray-500 p-4">No pages loaded yet.</p>
+          <p className="text-gray-500">No pages loaded yet.</p>
         )}
       </div>
     </div>
