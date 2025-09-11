@@ -63,17 +63,18 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         setIsLoading(true);
         const formData = new FormData();
 
-        console.log("📄 Files to upload:", files);
-
         // Append each PDF
         files.forEach((pdf, index) => {
-            console.log(`Appending file #${index + 1}:`, pdf.name, pdf.size, pdf.type);
-            formData.append("pdfs", pdf); // Ensure key matches backend
+            console.log(`📄 Appending file #${index + 1}: ${pdf.name} ${pdf.size} ${pdf.type}`);
+            formData.append("pdfs", pdf); // backend expects key "pdfs"
         });
 
-        // Append doctorData as JSON string
-        console.log("DoctorData to send:", doctorData);
-        formData.append("doctorData", JSON.stringify(doctorData));
+        // Ensure doctorData is always a valid JSON string
+        const doctorDataToSend = doctorData && Object.keys(doctorData).length > 0
+            ? JSON.stringify(doctorData)
+            : "{}";
+        console.log("🧑‍⚕️ DoctorData to send:", doctorDataToSend);
+        formData.append("doctorData", doctorDataToSend);
 
         const response = await fetch(
             "https://usefulapis-production.up.railway.app/train-on-images-pdf-ibne-sina",
@@ -83,7 +84,6 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             }
         );
 
-        // Attempt to parse JSON response
         let result;
         try {
             result = await response.json();
@@ -92,14 +92,11 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             throw new Error(`Failed to parse response JSON: ${text}`);
         }
 
-        // Handle backend-defined errors
         if (!response.ok || result.status === "error") {
-            console.error("❌ Backend error response:", result);
             alert(result.message || `Training failed with status ${response.status}`);
             return;
         }
 
-        // Success: display summary to user
         alert(`✅ Training successful!
 🆔 Session ID: ${result.session_id}
 📄 PDFs processed: ${result.images_processed}
@@ -107,12 +104,12 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
         setChatLog((prev) => [
             ...prev,
-            { type: "bot", message: result.prep_response || result.corrected_text }, // Use correct field
+            { type: "bot", message: result.prep_response || "" },
         ]);
 
-        // Store session_id for future chat use
         setSessionId(result.session_id);
         setShowRightPanel(true);
+
     } catch (error) {
         console.error("❌ Error during training:", error);
         alert(error.message || "Training failed. Please check your data and try again.");
