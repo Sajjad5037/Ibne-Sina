@@ -44,9 +44,9 @@ export default function Syllabus() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="h-screen w-screen flex flex-col">
       {/* Controls */}
-      <div className="flex items-end gap-4 mb-6">
+      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow">
         {/* Subject */}
         <div className="flex flex-col">
           <label className="font-medium text-gray-700 mb-1">Subject:</label>
@@ -89,41 +89,43 @@ export default function Syllabus() {
         </div>
       </div>
 
-      {/* Carousel PDF Viewer */}
-      {pdfFile && pages.length > 0 ? (
-        <div className="flex flex-col items-center">
-          <iframe
-            src={`${pdfFile}#page=${pages[currentPageIndex]}`}
-            width="100%"
-            height="900px"
-            title={`PDF Page ${pages[currentPageIndex]}`}
-            className="border rounded shadow mb-4"
-          />
+      {/* PDF Viewer */}
+      <div className="relative flex-1">
+        {pdfFile && pages.length > 0 ? (
+          <>
+            <iframe
+              src={`${pdfFile}#page=${pages[currentPageIndex]}`}
+              width="100%"
+              height="100%"
+              title={`PDF Page ${pages[currentPageIndex]}`}
+              className="border-0"
+            />
 
-          {/* Navigation */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={prevPage}
-              disabled={currentPageIndex === 0}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            >
-              ◀ Previous
-            </button>
-            <span>
-              Page {currentPageIndex + 1} of {pages.length}
-            </span>
-            <button
-              onClick={nextPage}
-              disabled={currentPageIndex === pages.length - 1}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            >
-              Next ▶
-            </button>
-          </div>
-        </div>
-      ) : (
-        <p className="text-gray-500 mt-4">No PDF loaded yet.</p>
-      )}
+            {/* Navigation */}
+            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6">
+              <button
+                onClick={prevPage}
+                disabled={currentPageIndex === 0}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                ◀
+              </button>
+              <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
+                Page {currentPageIndex + 1} / {pages.length}
+              </span>
+              <button
+                onClick={nextPage}
+                disabled={currentPageIndex === pages.length - 1}
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              >
+                ▶
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="text-gray-500 p-4">No PDF loaded yet.</p>
+        )}
+      </div>
     </div>
   );
 }
