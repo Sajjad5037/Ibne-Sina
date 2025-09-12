@@ -15,6 +15,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [files, setFiles] = useState([]); // <-- define files state here
   const [selectedFiles, setSelectedFiles] = useState([]); // initialize as empty array
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   
 
 
@@ -142,6 +143,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   }
 
   try {
+    setIsSending(true); // ✅ Set sending state
     const response = await fetch("https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,6 +168,8 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   } catch (error) {
     console.error(error);
     alert("Failed to get response from the tutor.");
+  }finally {
+    setIsSending(false); // ✅ Reset sending state
   }
 };
 
