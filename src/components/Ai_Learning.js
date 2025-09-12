@@ -149,6 +149,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         session_id: sessionId,
+        username: doctorData.name,       // <-- include username here
         message: userInput,
         first_message: chatLog.length === 0,
       }),
