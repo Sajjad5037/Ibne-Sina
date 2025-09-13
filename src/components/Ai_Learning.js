@@ -1,410 +1,156 @@
-import React, { useState } from 'react';
-import { marked } from 'marked';
+import { useState, useEffect } from "react";
 
+export default function Syllabus() {
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [className, setClassName] = useState("");
+  const [imageMap, setImageMap] = useState({});
+  const [loading, setLoading] = useState(true);
 
-const ChatbotTrainerUI = ({ doctorData }) => {
-  
-  const [pdfs, setPdfs] = useState([]);
-  const [selectedPDFs, setSelectedPDFs] = useState([]);
-  const [chatLog, setChatLog] = useState([]);
-  const [userInput, setUserInput] = useState("");
-  const [images, setImages] = useState([]);
-  const [selectedImages, setSelectedImages] = useState([]);
-  const [sessionId, setSessionId] = React.useState(null);  // store sessionId in state
-  const [showRightPanel, setShowRightPanel] = useState(false);
-  const [files, setFiles] = useState([]); // <-- define files state here
-  const [selectedFiles, setSelectedFiles] = useState([]); // initialize as empty array
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  
+  // Chat states
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
 
-
-
-  // File input ref
-  const handleFileChange = (e) => {
-  const selectedFiles = Array.from(e.target.files);
-
-  if (selectedFiles.length + files.length > 10) {
-    alert('You can only upload up to 10 PDFs.');
-    return;
-  }
-
-  setFiles((prev) => [...prev, ...selectedFiles]);
-};
-  const handleFileSelect = (event) => {
-    const options = event.target.options;
-    const selectedNames = [];
-    for (let i = 0; i < options.length; i++) {
-        if (options[i].selected) selectedNames.push(options[i].value);
-    }
-
-    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
-    };
-  const handlePDFSelect = (e) => {
-    const selectedNames = Array.from(e.target.selectedOptions).map(opt => opt.value);
-    setSelectedPDFs(files.filter(file => selectedNames.includes(file.name)));
-    };
-
-
-  const handleRemoveSelected = () => {
-    setFiles(prevFiles =>
-        prevFiles.filter(file => !selectedPDFs.some(sel => sel.name === file.name))
-    );
-    setSelectedPDFs([]);
-    };
-
-
-  const handleTrain = async () => {
-    if (files.length === 0) {
-        alert("Please upload at least one PDF before training.");
-        return;
-    }
-
-    try {
-        setIsLoading(true);
-        const formData = new FormData();
-
-        // Append each PDF file
-        files.forEach((pdf, index) => {
-            console.log(`📄 Appending file #${index + 1}: ${pdf.name}, size: ${pdf.size}, type: ${pdf.type}`);
-            formData.append("pdfs", pdf); // backend expects key "pdfs"
-        });
-
-        // Ensure doctorData is always a valid JSON string
-        const doctorDataToSend = doctorData && Object.keys(doctorData).length > 0
-            ? JSON.stringify(doctorData)
-            : "{}";
-        console.log("🧑‍⚕️ DoctorData to send:", doctorDataToSend);
-        formData.append("doctorData", doctorDataToSend);
-
-        // Send request to backend
-        const response = await fetch(
-            "https://usefulapis-production.up.railway.app/train-on-pdf-text-only",
-            {
-                method: "POST",
-                body: formData,
-            }
+  // 🔹 Fetch the image map JSON from your GCS bucket on mount
+  useEffect(() => {
+    const fetchImageMap = async () => {
+      try {
+        const res = await fetch(
+          "https://storage.googleapis.com/my-edu-bucket/imageMap.json"
         );
-
-        // Parse JSON response
-        let result;
-        try {
-            result = await response.json();
-        } catch (e) {
-            const text = await response.text();
-            throw new Error(`Failed to parse response JSON: ${text}`);
-        }
-
-        // Handle errors returned by backend
-        if (!response.ok || result.status === "error") {
-            alert(result.message || `Training failed with status ${response.status}`);
-            return;
-        }
-
-        // Success alert
-        alert(`✅ Training successful!
-🆔 Session ID: ${result.session_id}
-📄 PDFs processed: ${result.images_processed || files.length}
-📝 Total text length: ${result.total_text_length}`);
-
-        // Update chat log with GPT prep_response
-        setChatLog((prev) => [
-            ...prev,
-            { type: "bot", message: result.prep_response || "" },
-        ]);
-
-        // Store session info
-        setSessionId(result.session_id);
-        setShowRightPanel(true);
-
-    } catch (error) {
-        console.error("❌ Error during training:", error);
-        alert(error.message || "Training failed. Please check your data and try again.");
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-
-
-  const handleRemoveTraining = () => {
-    setFiles([]);           // Clear all uploaded PDFs
-    setSelectedPDFs([]);    // Clear selected PDFs
-    setSessionId(null);     // Reset session if needed
-    alert("✅ Previous PDF training removed.");
+        const data = await res.json();
+        setImageMap(data);
+      } catch (err) {
+        console.error("Failed to load imageMap.json", err);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchImageMap();
+  }, []);
 
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    const newMessage = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, newMessage]);
+    setInput("");
 
-  const handleSendMessage = async () => {
-  if (!userInput.trim()) return;
-  if (!sessionId) {
-    alert("Please train first to get a session ID.");
-    return;
-  }
-
-  try {
-    setIsSending(true); // ✅ Set sending state
-    const response = await fetch("https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: sessionId,
-        username: doctorData.name,       // <-- include username here
-        message: userInput,
-        first_message: chatLog.length === 0,
-      }),
-    });
-
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-    const data = await response.json();
-
-    setChatLog((prev) => [
-      ...prev,
-      { type: "user", message: userInput },
-      { type: "bot", message: data.reply },  // reply is already the HTML-formatted text
-    ]);
-
-    setUserInput("");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to get response from the tutor.");
-  }finally {
-    setIsSending(false); // ✅ Reset sending state
-  }
-};
-
-  const handleShowContext = () => {
-    alert("Show current training context (stub)");
+    // Simulate tutor reply
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { text: `You said: "${newMessage.text}"`, sender: "bot" },
+      ]);
+    }, 500);
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading syllabus data...</p>
+      </div>
+    );
+  }
+
   return (
-  <div
-  style={{
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "stretch",   // stretch panels vertically
-    width: "100%",
-    minHeight: "70vh",      // ✅ always fills full viewport height
-    padding: 20,
-    gap: 20,
-    fontFamily: "Arial, sans-serif",
-    boxSizing: "border-box",
-    backgroundColor: "#f0f2f5",
-  }}
->
+    <div className="h-screen w-screen flex flex-col">
+      {/* Controls */}
+      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
+        {/* Subject */}
+        <div className="flex flex-col">
+          <label className="font-medium text-gray-700 mb-1">Subject:</label>
+          <select
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2"
+          >
+            <option value="">Select subject</option>
+            {Object.keys(imageMap).map((subj) => (
+              <option key={subj} value={subj}>
+                {subj}
+              </option>
+            ))}
+          </select>
+        </div>
 
-    {/* Left Panel */}
-    <div
-    style={{
-        width: 300,
-        padding: 20,
-        backgroundColor: "#f9f9f9",
-        borderRadius: 8,
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-    }}
-    >
-    <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Upload PDF of your lesson to educate the AI
-    </h3>
+        {/* Chapter */}
+        <div className="flex flex-col">
+          <label className="font-medium text-gray-700 mb-1">Chapter:</label>
+          <select
+            value={chapter}
+            onChange={(e) => setChapter(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2"
+            disabled={!subject}
+          >
+            <option value="">Select chapter</option>
+            {subject &&
+              Object.keys(imageMap[subject] || {}).map((ch) => (
+                <option key={ch} value={ch}>
+                  {ch}
+                </option>
+              ))}
+          </select>
+        </div>
 
-    <select
-        multiple
-        value={selectedFiles.map((file) => file.name)}
-        onChange={handleFileSelect}
-        style={{
-        flex: 1,
-        minHeight: 120,
-        width: "100%",
-        padding: 10,
-        marginBottom: 15,
-        borderRadius: 5,
-        border: "1px solid #ccc",
-        boxSizing: "border-box",
-        }}
-    >
-        {files.map((file, index) => (
-        <option key={index} value={file.name}>
-            {file.name}
-        </option>
-        ))}
-    </select>
+        {/* Class */}
+        <div className="flex flex-col">
+          <label className="font-medium text-gray-700 mb-1">Class:</label>
+          <select
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2"
+            disabled={!chapter}
+          >
+            <option value="">Select class</option>
+            {chapter &&
+              Object.keys(imageMap[subject]?.[chapter] || {}).map((cls) => (
+                <option key={cls} value={cls}>
+                  {cls}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
 
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <label
-        htmlFor="fileInput"
-        style={{
-            padding: "10px 20px",
-            backgroundColor: "#4CAF50",
-            color: "#fff",
-            borderRadius: 5,
-            cursor: "pointer",
-            textAlign: "center",
-            userSelect: "none",
-        }}
-        >
-        Upload PDF
-        </label>
-        <input
-        id="fileInput"
-        type="file"
-        accept="application/pdf"
-        multiple
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-        />
-        <button
-        onClick={handleRemoveSelected}
-        style={{
-            padding: 10,
-            borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#FF0000",
-            cursor: "pointer",
-            border: "none",
-        }}
-        >
-        Remove
-        </button>
-        <button
-        onClick={handleTrain}
-        style={{
-            padding: 10,
-            borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#4CAF50",
-            cursor: "pointer",
-            border: "none",
-        }}
-        >
-        Educate AI on your lesson
-        </button>
-        {/* Loader / Processing Indicator */}
-        {isLoading && (
-            <div className="loader">
-            <img src="/spinner.gif" alt="Processing..." />
-            <p>Processing images, please wait...</p>
-            </div>
-        )}
-    </div>
-    </div>
-
-    {/* Right Panel */}
-    <div
-  style={{
-    flex: 1,                 // ⬅️ take all remaining vertical space
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-    display: "flex",
-    flexDirection: "column",
-    minHeight: 0,            // ⬅️ important for inner scroll to work
-    boxSizing: "border-box",
-  }}
->
-      <h3 style={{ textAlign: "center", color: "#333", marginBottom: 20 }}>
-        Virtual AI Tutor
-      </h3>
-
-      {/* Scrollable chat messages */}
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          marginBottom: 15,
-          border: "1px solid #ddd",
-          padding: 15,
-          borderRadius: 8,
-          backgroundColor: "#fff",
-          boxSizing: "border-box",
-        }}
-      >
-        {chatLog.map((msg, index) => {
-          const cleanedMessage =
-            msg.type === "bot"
-              ? msg.message.replace(/([^\.\?\!])\n/g, "$1 ").replace(/\n/g, "<br>")
-              : msg.message;
-          return (
+      {/* Chat Window */}
+      <div className="flex-1 bg-gray-50 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.length === 0 && (
+            <p className="text-gray-400 text-center">
+              Start the conversation with your tutor...
+            </p>
+          )}
+          {messages.map((msg, i) => (
             <div
-              key={index}
-              style={{
-                marginBottom: 10,
-                textAlign: msg.type === "user" ? "right" : "left",
-              }}
+              key={i}
+              className={`max-w-xs px-4 py-2 rounded-lg ${
+                msg.sender === "user"
+                  ? "bg-blue-600 text-white ml-auto"
+                  : "bg-gray-200 text-gray-800"
+              }`}
             >
-              {msg.type === "bot" ? (
-                <div
-                  style={{
-                    display: "block",
-                    backgroundColor: "#f1f1f1",
-                    padding: 10,
-                    borderRadius: 10,
-                    maxWidth: "90%",
-                    wordWrap: "break-word",
-                    lineHeight: 1.6,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: marked.parse(cleanedMessage) }}
-                />
-              ) : (
-                <div
-                  style={{
-                    display: "inline-block",
-                    backgroundColor: "#f1f1f1",
-                    padding: 10,
-                    borderRadius: 10,
-                    maxWidth: "70%",
-                    wordWrap: "break-word",
-                  }}
-                >
-                  {cleanedMessage}
-                </div>
-              )}
+              {msg.text}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <textarea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Type your question...(suggest improvements in the essay)"
-          rows={3}
-          style={{
-            flex: 1,
-            padding: 10,
-            borderRadius: 5,
-            border: "1px solid #ccc",
-            resize: "vertical",
-            overflowY: "auto",
-            boxSizing: "border-box",
-          }}
-        />
-        <button
-          onClick={handleSendMessage}
-          style={{
-            padding: 10,
-            borderRadius: 5,
-            color: "#fff",
-            backgroundColor: "#2196F3",
-            cursor: "pointer",
-            border: "none",
-            minWidth: 80,
-          }}
-        >
-          Send
-        </button>
+        <div className="p-4 bg-white border-t flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Type your message..."
+            className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+          />
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
-
-
-};
-
-export default ChatbotTrainerUI;
+  );
+}
