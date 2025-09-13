@@ -67,8 +67,8 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         chapter,
         className,
         pages: selectedPages,
-        doctorData: JSON.stringify({ name: doctorData.name }) // <-- added username
-      }),
+        name: doctorData.name  // directly pass the username
+    }),
     });
 
     const data = await response.json();
