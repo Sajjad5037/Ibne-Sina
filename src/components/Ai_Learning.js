@@ -9,7 +9,10 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
+  // Fetch syllabus/image map
   useEffect(() => {
     const fetchImageMap = async () => {
       try {
@@ -27,21 +30,19 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     fetchImageMap();
   }, []);
 
-  const handleTrain = () => {
+  // Start conversation / training
+  const startConversation = () => {
     if (!subject || !chapter || !className) {
       alert("Please select subject, chapter, and class first.");
       return;
     }
-  
-    // Get the selected image URLs from the imageMap
+
     const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
-  
     if (selectedPages.length === 0) {
       alert("No pages found for this selection.");
       return;
     }
-  
-    // Reset chat and begin conversation
+
     setMessages([
       {
         text: `Training session started for ${subject} > ${chapter} > ${className}.`,
@@ -52,62 +53,70 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         sender: "bot",
       },
     ]);
-  
-    // ⚡ Optional: If you want to store the selected pages in state for later use
-    // setSelectedPages(selectedPages);
+
+    // Generate a session ID (placeholder for real backend)
+    setSessionId(Date.now().toString());
   };
 
+  // Send a message to the tutor API
   const handleSendMessage = async () => {
-  if (!userInput.trim()) return;
+    if (!input.trim()) return;
 
-  if (!sessionId) {
-    alert("Please start training first to get a session ID.");
-    return;
-  }
+    if (!sessionId) {
+      alert("Please start training first to get a session ID.");
+      return;
+    }
 
-  try {
-    setIsSending(true); // show loading state while sending
+    try {
+      setIsSending(true);
 
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          username: doctorData.name, // pass user’s name
-          message: userInput,
-          first_message: chatLog.length === 0, // flag if this is the first message
-        }),
-      }
+      const response = await fetch(
+        "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            username: doctorData?.name || "Guest",
+            message: input,
+            first_message: messages.length === 0,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        { text: input, sender: "user" },
+        { text: data.reply, sender: "bot" },
+      ]);
+
+      setInput("");
+    } catch (error) {
+      console.error("Message send failed:", error);
+      alert("Failed to get a response from the tutor.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading syllabus data...</p>
+      </div>
     );
-
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-    const data = await response.json();
-
-    // Append both user and bot messages to chatLog
-    setChatLog((prev) => [
-      ...prev,
-      { type: "user", message: userInput },
-      { type: "bot", message: data.reply }, // reply is HTML-formatted text from API
-    ]);
-
-    setUserInput(""); // clear the input box
-  } catch (error) {
-    console.error("Message send failed:", error);
-    alert("Failed to get a response from the tutor.");
-  } finally {
-    setIsSending(false); // reset loading state
   }
-};
-
 
   return (
     <div className="h-screen flex flex-col items-center bg-gray-50">
       <div className="flex flex-col h-full w-full max-w-3xl mx-auto shadow bg-white">
         {/* Controls */}
         <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10">
+          {/* Subject */}
           <div className="flex flex-col">
             <label className="font-medium text-gray-700 mb-1">Subject:</label>
             <select
@@ -124,6 +133,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             </select>
           </div>
 
+          {/* Chapter */}
           <div className="flex flex-col">
             <label className="font-medium text-gray-700 mb-1">Chapter:</label>
             <select
@@ -142,6 +152,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             </select>
           </div>
 
+          {/* Class */}
           <div className="flex flex-col">
             <label className="font-medium text-gray-700 mb-1">Class:</label>
             <select
@@ -159,22 +170,16 @@ const ChatbotTrainerUI = ({ doctorData }) => {
                 ))}
             </select>
           </div>
+
+          {/* Start Conversation Button */}
           <div className="flex items-end">
             <button
-              onClick={() => {
-                if (subject && chapter && className) {
-                  setMessages([
-                    {
-                      text: `Conversation started for ${subject} > ${chapter} > ${className}`,
-                      sender: "bot",
-                    },
-                  ]);
-                }
-              }}
+              onClick={startConversation}
               className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
             >
               Start Conversation
             </button>
+          </div>
         </div>
 
         {/* Chat Window */}
@@ -199,25 +204,28 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             ))}
           </div>
 
+          {/* Input Box */}
           <div className="p-4 bg-white border-t flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               placeholder="Type your message..."
               className="flex-1 border border-gray-300 rounded-md px-3 py-2"
             />
             <button
               onClick={handleSendMessage}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              disabled={isSending}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              Send
+              {isSending ? "Sending..." : "Send"}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
 export default ChatbotTrainerUI;
