@@ -27,27 +27,81 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     fetchImageMap();
   }, []);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const newMessage = { text: input, sender: "user" };
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
-
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { text: `You said: "${newMessage.text}"`, sender: "bot" },
-      ]);
-    }, 500);
+  const handleTrain = () => {
+    if (!subject || !chapter || !className) {
+      alert("Please select subject, chapter, and class first.");
+      return;
+    }
+  
+    // Get the selected image URLs from the imageMap
+    const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
+  
+    if (selectedPages.length === 0) {
+      alert("No pages found for this selection.");
+      return;
+    }
+  
+    // Reset chat and begin conversation
+    setMessages([
+      {
+        text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+        sender: "bot",
+      },
+      {
+        text: `Found ${selectedPages.length} reference pages. You can now ask questions based on this material.`,
+        sender: "bot",
+      },
+    ]);
+  
+    // ⚡ Optional: If you want to store the selected pages in state for later use
+    // setSelectedPages(selectedPages);
   };
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading syllabus data...</p>
-      </div>
-    );
+  const handleSendMessage = async () => {
+  if (!userInput.trim()) return;
+
+  if (!sessionId) {
+    alert("Please start training first to get a session ID.");
+    return;
   }
+
+  try {
+    setIsSending(true); // show loading state while sending
+
+    const response = await fetch(
+      "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          username: doctorData.name, // pass user’s name
+          message: userInput,
+          first_message: chatLog.length === 0, // flag if this is the first message
+        }),
+      }
+    );
+
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+    const data = await response.json();
+
+    // Append both user and bot messages to chatLog
+    setChatLog((prev) => [
+      ...prev,
+      { type: "user", message: userInput },
+      { type: "bot", message: data.reply }, // reply is HTML-formatted text from API
+    ]);
+
+    setUserInput(""); // clear the input box
+  } catch (error) {
+    console.error("Message send failed:", error);
+    alert("Failed to get a response from the tutor.");
+  } finally {
+    setIsSending(false); // reset loading state
+  }
+};
+
 
   return (
     <div className="h-screen flex flex-col items-center bg-gray-50">
@@ -155,7 +209,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
               className="flex-1 border border-gray-300 rounded-md px-3 py-2"
             />
             <button
-              onClick={sendMessage}
+              onClick={handleSendMessage}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
             >
               Send
