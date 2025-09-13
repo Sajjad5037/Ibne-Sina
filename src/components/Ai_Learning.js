@@ -31,32 +31,75 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   }, []);
 
   // Start conversation / training
-  const startConversation = () => {
-    if (!subject || !chapter || !className) {
-      alert("Please select subject, chapter, and class first.");
-      return;
-    }
+  
+  const startConversation = async () => {
+  if (!subject || !chapter || !className) {
+    alert("Please select subject, chapter, and class first.");
+    return;
+  }
 
-    const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
-    if (selectedPages.length === 0) {
-      alert("No pages found for this selection.");
-      return;
-    }
+  const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
+  if (selectedPages.length === 0) {
+    alert("No pages found for this selection.");
+    return;
+  }
 
-    setMessages([
-      {
-        text: `Training session started for ${subject} > ${chapter} > ${className}.`,
-        sender: "bot",
+  setMessages([
+    {
+      text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+      sender: "bot",
+    },
+    {
+      text: `Found ${selectedPages.length} reference pages. Sending them to the backend...`,
+      sender: "bot",
+    },
+  ]);
+
+  try {
+    // Send selected images/pages to backend
+    const response = await fetch("https://usefulapis-production.up.railway.app/start-session-ibne-sina", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        subject,
+        chapter,
+        className,
+        pages: selectedPages,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
+
+      // Use backend message instead of hardcoded text
+      const backendMessage = data.message || "Session initialized successfully.";
+
+      setMessages(prev => [
+        ...prev,
+        {
+          text: backendMessage,
+          sender: "bot",
+        },
+      ]);
+    } else {
+      throw new Error("No session ID returned from backend.");
+    }
+  } catch (error) {
+    console.error("Error starting session:", error);
+    setMessages(prev => [
+      ...prev,
       {
-        text: `Found ${selectedPages.length} reference pages. You can now ask questions based on this material.`,
+        text: "Failed to start session. Please try again.",
         sender: "bot",
       },
     ]);
+  }
+};
 
-    // Generate a session ID (placeholder for real backend)
-    setSessionId(Date.now().toString());
-  };
 
   // Send a message to the tutor API
   const handleSendMessage = async () => {
