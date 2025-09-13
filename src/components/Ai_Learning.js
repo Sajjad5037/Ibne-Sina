@@ -105,6 +105,22 @@ const ChatbotTrainerUI = ({ doctorData }) => {
                 ))}
             </select>
           </div>
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                if (subject && chapter && className) {
+                  setMessages([
+                    {
+                      text: `Conversation started for ${subject} > ${chapter} > ${className}`,
+                      sender: "bot",
+                    },
+                  ]);
+                }
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              Start Conversation
+            </button>
         </div>
 
         {/* Chat Window */}
