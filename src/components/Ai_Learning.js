@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function Syllabus() {
+export default function ChatbotTrainerUI() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [className, setClassName] = useState("");
