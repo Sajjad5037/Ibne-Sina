@@ -1,42 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Syllabus() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-  const [className, setClassName] = useState(""); // renamed from topic
+  const [className, setClassName] = useState("");
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imageMap, setImageMap] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  const imageMap = {
-    Math: {
-      Chapter1: {
-        ClassA: ["/page_1.png", "/page_2.png"],
-        ClassB: ["/page_3.png"]
-      },
-      Chapter2: {
-        ClassA: ["/page_4.png"],
-      },
-    },
-    Physics: {
-      Chapter1: {
-        ClassA: ["/page_1.png"],
-      },
-      Chapter2: {
-        ClassB: ["/page_2.png", "/page_3.png"],
-      },
-    },
-    Biology: {
-      Chapter1: {
-        ClassA: ["/page_5.png", "/page_6.png"],
-      },
-      Chapter3: {
-        ClassC: ["/page_7.png"],
-      },
-    },
-  };
+  // 🔹 Fetch the image map JSON from your GCS bucket on mount
+  useEffect(() => {
+    const fetchImageMap = async () => {
+      try {
+        const res = await fetch(
+          "https://storage.googleapis.com/my-edu-bucket/imageMap.json"
+        );
+        const data = await res.json();
+        setImageMap(data);
+      } catch (err) {
+        console.error("Failed to load imageMap.json", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImageMap();
+  }, []);
 
   const handleLoadPages = () => {
-    if (subject && chapter && className && imageMap[subject]?.[chapter]?.[className]) {
+    if (
+      subject &&
+      chapter &&
+      className &&
+      imageMap[subject]?.[chapter]?.[className]
+    ) {
       setImages(imageMap[subject][chapter][className]);
       setCurrentIndex(0);
     } else {
@@ -46,7 +43,16 @@ export default function Syllabus() {
   };
 
   const prevPage = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1);
-  const nextPage = () => currentIndex < images.length - 1 && setCurrentIndex(currentIndex + 1);
+  const nextPage = () =>
+    currentIndex < images.length - 1 && setCurrentIndex(currentIndex + 1);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading syllabus data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -61,9 +67,11 @@ export default function Syllabus() {
             className="border border-gray-300 rounded-md px-3 py-2"
           >
             <option value="">Select subject</option>
-            <option value="Math">Math</option>
-            <option value="Physics">Physics</option>
-            <option value="Biology">Biology</option>
+            {Object.keys(imageMap).map((subj) => (
+              <option key={subj} value={subj}>
+                {subj}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -74,11 +82,15 @@ export default function Syllabus() {
             value={chapter}
             onChange={(e) => setChapter(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-2"
+            disabled={!subject}
           >
             <option value="">Select chapter</option>
-            <option value="Chapter1">Chapter 1</option>
-            <option value="Chapter2">Chapter 2</option>
-            <option value="Chapter3">Chapter 3</option>
+            {subject &&
+              Object.keys(imageMap[subject] || {}).map((ch) => (
+                <option key={ch} value={ch}>
+                  {ch}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -89,11 +101,15 @@ export default function Syllabus() {
             value={className}
             onChange={(e) => setClassName(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-2"
+            disabled={!chapter}
           >
             <option value="">Select class</option>
-            <option value="ClassA">Class A</option>
-            <option value="ClassB">Class B</option>
-            <option value="ClassC">Class C</option>
+            {chapter &&
+              Object.keys(imageMap[subject]?.[chapter] || {}).map((cls) => (
+                <option key={cls} value={cls}>
+                  {cls}
+                </option>
+              ))}
           </select>
         </div>
 
