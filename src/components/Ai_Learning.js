@@ -115,7 +115,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
       setIsSending(true);
 
       const response = await fetch(
-        "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibe_Sina",
+        "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibne_Sina",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
