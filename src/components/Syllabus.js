@@ -14,7 +14,7 @@ export default function Syllabus() {
     const fetchImageMap = async () => {
       try {
         const res = await fetch(
-          "https://storage.googleapis.com/my-edu-bucket/imageMap.json"
+          "https://storage.googleapis.com/ibne_sina_app/imageMap.json"
         );
         const data = await res.json();
         setImageMap(data);
