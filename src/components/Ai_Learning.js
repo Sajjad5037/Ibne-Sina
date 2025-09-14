@@ -218,10 +218,10 @@ const ChatbotTrainerUI = ({ doctorData }) => {
                       ? "bg-blue-600 text-white self-end"
                       : "bg-gray-200 text-gray-800 self-start"
                   }`}
-                >
-                  {msg.text}
-                </div>
+                  dangerouslySetInnerHTML={{ __html: msg.text }}
+                />
               ))}
+
             </div>
 
             {/* Input Box */}
