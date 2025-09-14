@@ -158,94 +158,96 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   );
 
   return (
-    <div className="h-screen flex flex-col items-center bg-gray-50 p-4">
-      <div className="flex flex-col h-full w-full max-w-3xl shadow bg-white rounded-lg overflow-hidden">
-        {/* Controls */}
-        <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10">
-          {renderSelect(
-            "Class",
-            className,
-            (val) => {
-              setClassName(val);
-              setSubject("");
-              setChapter("");
-            },
-            Object.keys(imageMap)
-          )}
-          {renderSelect(
-            "Subject",
-            subject,
-            (val) => {
-              setSubject(val);
-              setChapter("");
-            },
-            className ? Object.keys(imageMap[className]) : [],
-            !className
-          )}
-          {renderSelect(
-            "Chapter",
-            chapter,
-            setChapter,
-            className && subject ? Object.keys(imageMap[className][subject]) : [],
-            !subject
-          )}
-          <div className="flex items-end">
-            <button
-              onClick={startConversation}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-            >
-              Start Conversation
-            </button>
-          </div>
-        </div>
-
-        {/* Chat Window */}
-        <div className="flex-1 flex flex-col w-full">
-          {/* Chat messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 w-full">
-            {messages.length === 0 && (
-              <p className="text-gray-400 text-center w-full">
-                Start the conversation with your tutor...
-              </p>
+      <div className="h-screen flex flex-col bg-gray-50 p-2">
+        <div className="flex flex-col h-full w-full shadow bg-white rounded-lg overflow-hidden">
+          
+          {/* Controls */}
+          <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10 w-full">
+            {renderSelect(
+              "Class",
+              className,
+              (val) => {
+                setClassName(val);
+                setSubject("");
+                setChapter("");
+              },
+              Object.keys(imageMap)
             )}
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`w-full px-4 py-2 rounded-lg max-w-full ${
-                  msg.sender === "user"
-                    ? "bg-blue-600 text-white self-end"
-                    : "bg-gray-200 text-gray-800 self-start"
-                }`}
+            {renderSelect(
+              "Subject",
+              subject,
+              (val) => {
+                setSubject(val);
+                setChapter("");
+              },
+              className ? Object.keys(imageMap[className]) : [],
+              !className
+            )}
+            {renderSelect(
+              "Chapter",
+              chapter,
+              setChapter,
+              className && subject ? Object.keys(imageMap[className][subject]) : [],
+              !subject
+            )}
+            <div className="flex items-end">
+              <button
+                onClick={startConversation}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
-                {msg.text}
-              </div>
-            ))}
+                Start Conversation
+              </button>
+            </div>
           </div>
 
-          {/* Input Box */}
-          <div className="p-4 bg-white border-t flex gap-2 w-full">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Type your message..."
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 w-full"
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={isSending}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSending ? "Sending..." : "Send"}
-            </button>
+          {/* Chat Window */}
+          <div className="flex-1 flex flex-col w-full">
+            
+            {/* Chat messages area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 w-full">
+              {messages.length === 0 && (
+                <p className="text-gray-400 text-center w-full">
+                  Start the conversation with your tutor...
+                </p>
+              )}
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`w-full px-4 py-2 rounded-lg max-w-full ${
+                    msg.sender === "user"
+                      ? "bg-blue-600 text-white self-end"
+                      : "bg-gray-200 text-gray-800 self-start"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+
+            {/* Input Box */}
+            <div className="p-4 bg-white border-t flex gap-2 w-full">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                placeholder="Type your message..."
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 w-full"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isSending}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSending ? "Sending..." : "Send"}
+              </button>
+            </div>
           </div>
+
         </div>
-
-
       </div>
-    </div>
-  );
+
+      );
 };
 
 export default ChatbotTrainerUI;
