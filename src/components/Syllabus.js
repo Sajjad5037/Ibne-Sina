@@ -56,110 +56,112 @@ export default function Syllabus() {
 
   return (
     <div className="h-screen w-screen flex flex-col">
-      {/* Controls */}
-      <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
-        {/* Subject */}
-        <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Subject:</label>
-          <select
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
-          >
-            <option value="">Select subject</option>
-            {Object.keys(imageMap).map((subj) => (
-              <option key={subj} value={subj}>
-                {subj}
-              </option>
-            ))}
-          </select>
-        </div>
+  {/* Controls */}
+  <div className="flex items-end gap-4 p-4 bg-gray-100 shadow z-10">
+    
+    {/* Class */}
+    <div className="flex flex-col">
+      <label className="font-medium text-gray-700 mb-1">Class:</label>
+      <select
+        value={className}
+        onChange={(e) => setClassName(e.target.value)}
+        className="border border-gray-300 rounded-md px-3 py-2"
+      >
+        <option value="">Select class</option>
+        {Object.keys(imageMap).map((cls) => (
+          <option key={cls} value={cls}>
+            {cls}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        {/* Chapter */}
-        <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Chapter:</label>
-          <select
-            value={chapter}
-            onChange={(e) => setChapter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
-            disabled={!subject}
-          >
-            <option value="">Select chapter</option>
-            {subject &&
-              Object.keys(imageMap[subject] || {}).map((ch) => (
-                <option key={ch} value={ch}>
-                  {ch}
-                </option>
-              ))}
-          </select>
-        </div>
+    {/* Subject */}
+    <div className="flex flex-col">
+      <label className="font-medium text-gray-700 mb-1">Subject:</label>
+      <select
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        className="border border-gray-300 rounded-md px-3 py-2"
+        disabled={!className}
+      >
+        <option value="">Select subject</option>
+        {className &&
+          Object.keys(imageMap[className] || {}).map((subj) => (
+            <option key={subj} value={subj}>
+              {subj}
+            </option>
+          ))}
+      </select>
+    </div>
 
-        {/* Class */}
-        <div className="flex flex-col">
-          <label className="font-medium text-gray-700 mb-1">Class:</label>
-          <select
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
-            disabled={!chapter}
-          >
-            <option value="">Select class</option>
-            {chapter &&
-              Object.keys(imageMap[subject]?.[chapter] || {}).map((cls) => (
-                <option key={cls} value={cls}>
-                  {cls}
-                </option>
-              ))}
-          </select>
-        </div>
+    {/* Chapter */}
+    <div className="flex flex-col">
+      <label className="font-medium text-gray-700 mb-1">Chapter:</label>
+      <select
+        value={chapter}
+        onChange={(e) => setChapter(e.target.value)}
+        className="border border-gray-300 rounded-md px-3 py-2"
+        disabled={!subject}
+      >
+        <option value="">Select chapter</option>
+        {subject &&
+          Object.keys(imageMap[className]?.[subject] || {}).map((ch) => (
+            <option key={ch} value={ch}>
+              {ch}
+            </option>
+          ))}
+      </select>
+    </div>
 
-        {/* Load Pages Button */}
-        <div className="flex flex-col">
-          <label className="invisible mb-1">Load</label>
+    {/* Load Pages Button */}
+    <div className="flex flex-col">
+      <label className="invisible mb-1">Load</label>
+      <button
+        onClick={handleLoadPages}
+        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+      >
+        Load Pages
+      </button>
+    </div>
+  </div>
+
+  {/* Image Viewer */}
+  <div className="relative flex-1 flex justify-center items-center bg-gray-50">
+    {images.length > 0 ? (
+      <>
+        <img
+          src={images[currentIndex]}
+          alt={`Page ${currentIndex + 1}`}
+          className="w-full h-full object-contain transform scale-100"
+        />
+
+        {/* Navigation */}
+        <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
           <button
-            onClick={handleLoadPages}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            onClick={prevPage}
+            disabled={currentIndex === 0}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
           >
-            Load Pages
+            ◀
+          </button>
+          <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
+            Page {currentIndex + 1} / {images.length}
+          </span>
+          <button
+            onClick={nextPage}
+            disabled={currentIndex === images.length - 1}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+            ▶
           </button>
         </div>
-      </div>
+      </>
+    ) : (
+      <p className="text-gray-500 p-4">No pages loaded yet.</p>
+    )}
+  </div>
+</div>
 
-      {/* Image Viewer */}
-      <div className="relative flex-1 flex justify-center items-center bg-gray-50">
-        {images.length > 0 ? (
-          <>
-            <img
-              src={images[currentIndex]}
-              alt={`Page ${currentIndex + 1}`}
-              className="w-full h-full object-contain transform scale-100"
-            />
-
-            {/* Navigation */}
-            <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-6 transform -translate-y-1/2">
-              <button
-                onClick={prevPage}
-                disabled={currentIndex === 0}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ◀
-              </button>
-              <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded">
-                Page {currentIndex + 1} / {images.length}
-              </span>
-              <button
-                onClick={nextPage}
-                disabled={currentIndex === images.length - 1}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                ▶
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="text-gray-500 p-4">No pages loaded yet.</p>
-        )}
-      </div>
-    </div>
   );
 }
