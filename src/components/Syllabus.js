@@ -1,65 +1,65 @@
 import { useState, useEffect } from "react";
 
 export default function Syllabus() {
+  const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-  const [className, setClassName] = useState("");
+  const [imageMap, setImageMap] = useState({});
   const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [imageMap, setImageMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Fetch the image map JSON from your GCS bucket on mount
+  // 🔹 Load image map from GCS on mount
   useEffect(() => {
     const fetchImageMap = async () => {
       try {
-        const res = await fetch(
+        const response = await fetch(
           "https://storage.googleapis.com/ibne_sina_app/imageMap1.json"
         );
-        const data = await res.json();
+        const data = await response.json();
         setImageMap(data);
-      } catch (err) {
-        console.error("Failed to load imageMap1.json", err);
+      } catch (error) {
+        console.error("❌ Failed to load imageMap1.json", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchImageMap();
   }, []);
 
+  // 🔹 Load pages based on user selection
   const handleLoadPages = () => {
-    console.log("Selected values:", {
-      className: `"${className}"`,
-      subject: `"${subject}"`,
-      chapter: `"${chapter}"`
-    });
-  
-    // Log available keys at each level for comparison
+    console.log("Selected:", { className, subject, chapter });
     console.log("Available classes:", Object.keys(imageMap));
+
     if (className && imageMap[className]) {
-      console.log("Available subjects in this class:", Object.keys(imageMap[className]));
+      console.log("Available subjects:", Object.keys(imageMap[className]));
     }
     if (className && subject && imageMap[className]?.[subject]) {
-      console.log("Available chapters in this subject:", Object.keys(imageMap[className][subject]));
+      console.log(
+        "Available chapters:",
+        Object.keys(imageMap[className][subject])
+      );
     }
-  
+
     const pages = imageMap[className]?.[subject]?.[chapter];
-  
-    if (pages && pages.length > 0) {
+
+    if (pages?.length) {
       console.log("✅ Found pages:", pages);
       setImages(pages);
       setCurrentIndex(0);
     } else {
-      console.warn("⚠️ No matching pages found for your selection!");
+      console.warn("⚠️ No matching pages found");
       setImages([]);
       setCurrentIndex(0);
     }
   };
 
-
-  const prevPage = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1);
+  // 🔹 Navigation
+  const prevPage = () => currentIndex > 0 && setCurrentIndex((i) => i - 1);
   const nextPage = () =>
-    currentIndex < images.length - 1 && setCurrentIndex(currentIndex + 1);
+    currentIndex < images.length - 1 && setCurrentIndex((i) => i + 1);
 
   if (loading) {
     return (
@@ -128,7 +128,7 @@ export default function Syllabus() {
           </select>
         </div>
 
-        {/* Load Pages Button */}
+        {/* Load Pages */}
         <div className="flex flex-col">
           <label className="invisible mb-1">Load</label>
           <button
@@ -141,10 +141,10 @@ export default function Syllabus() {
       </div>
 
       {/* Image Viewer */}
-      <div className="relative flex-1 flex justify-center items-center bg-gray-50 h-[80vh]">
-        {images.length > 0 ? (
+      <div className="relative flex-1 flex justify-center items-center bg-gray-50">
+        {images.length ? (
           <>
-            {/* 🔹 Debug helper to see the image URL */}
+            {/* Debug helper */}
             <pre className="absolute top-2 left-2 bg-white text-xs p-1 rounded shadow">
               {images[currentIndex]}
             </pre>
