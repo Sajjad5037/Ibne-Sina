@@ -156,6 +156,164 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   }
 
   return (
+    import { useState, useEffect } from "react";
+
+const ChatbotTrainerUI = ({ doctorData }) => {
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [className, setClassName] = useState("");
+  const [imageMap, setImageMap] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
+
+  // Fetch syllabus/image map
+  useEffect(() => {
+    const fetchImageMap = async () => {
+      try {
+        const res = await fetch(
+          "https://storage.googleapis.com/ibne_sina_app/imageMap.json"
+        );
+        const data = await res.json();
+        setImageMap(data);
+      } catch (err) {
+        console.error("Failed to load imageMap.json", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImageMap();
+  }, []);
+
+  // Start conversation / training
+  
+  const startConversation = async () => {
+  if (!subject || !chapter || !className) {
+    alert("Please select subject, chapter, and class first.");
+    return;
+  }
+
+  const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
+  if (selectedPages.length === 0) {
+    alert("No pages found for this selection.");
+    return;
+  }
+
+  setMessages([
+    {
+      text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+      sender: "bot",
+    },
+    {
+      text: `Found ${selectedPages.length} reference pages. Sending them to the backend...`,
+      sender: "bot",
+    },
+  ]);
+
+  try {
+    // Send selected images/pages to backend
+    const response = await fetch("https://usefulapis-production.up.railway.app/start-session-ibne-sina", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        subject,
+        chapter,
+        className,
+        pages: selectedPages,
+        name: doctorData.name  // directly pass the username
+    }),
+    });
+
+    const data = await response.json();
+
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
+
+      // Use backend message instead of hardcoded text
+      const backendMessage = data.message || "Session initialized successfully.";
+
+      setMessages(prev => [
+        ...prev,
+        {
+          text: backendMessage,
+          sender: "bot",
+        },
+      ]);
+    } else {
+      throw new Error("No session ID returned from backend.");
+    }
+  } catch (error) {
+    console.error("Error starting session:", error);
+    setMessages(prev => [
+      ...prev,
+      {
+        text: "Failed to start session. Please try again.",
+        sender: "bot",
+      },
+    ]);
+  }
+};
+
+
+  // Send a message to the tutor API
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    if (!sessionId) {
+      alert("Please start training first to get a session ID.");
+      return;
+    }
+
+    try {
+      setIsSending(true);
+
+      const response = await fetch(
+        "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibne_Sina",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            username: doctorData?.name || "Guest",
+            message: input,
+            first_message: messages.length === 0,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        { text: input, sender: "user" },
+        { text: data.reply, sender: "bot" },
+      ]);
+
+      setInput("");
+    } catch (error) {
+      console.error("Message send failed:", error);
+      alert("Failed to get a response from the tutor.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading syllabus data...</p>
+      </div>
+    );
+  }
+
+  return (
     <div className="h-screen flex flex-col items-center bg-gray-50">
       <div className="flex flex-col h-full w-full max-w-3xl mx-auto shadow bg-white">
         {/* Controls */}
@@ -269,6 +427,11 @@ const ChatbotTrainerUI = ({ doctorData }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+export default ChatbotTrainerUI;
+
   );
 };
 
