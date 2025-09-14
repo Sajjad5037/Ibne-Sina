@@ -33,12 +33,12 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   // Start conversation / training
   
   const startConversation = async () => {
-  if (!subject || !chapter || !className) {
-    alert("Please select subject, chapter, and class first.");
+  if (!className || !subject || !chapter) {
+    alert("Please select class, subject, and chapter first.");
     return;
   }
-
-  const selectedPages = imageMap[subject]?.[chapter]?.[className] || [];
+  
+  const selectedPages = imageMap[className]?.[subject]?.[chapter] || [];
   if (selectedPages.length === 0) {
     alert("No pages found for this selection.");
     return;
