@@ -28,19 +28,34 @@ export default function Syllabus() {
   }, []);
 
   const handleLoadPages = () => {
-    if (
-      className &&
-      subject &&
-      chapter &&
-      imageMap[className]?.[subject]?.[chapter]
-    ) {
-      setImages(imageMap[className][subject][chapter]);
+    console.log("Selected values:", {
+      className: `"${className}"`,
+      subject: `"${subject}"`,
+      chapter: `"${chapter}"`
+    });
+  
+    // Log available keys at each level for comparison
+    console.log("Available classes:", Object.keys(imageMap));
+    if (className && imageMap[className]) {
+      console.log("Available subjects in this class:", Object.keys(imageMap[className]));
+    }
+    if (className && subject && imageMap[className]?.[subject]) {
+      console.log("Available chapters in this subject:", Object.keys(imageMap[className][subject]));
+    }
+  
+    const pages = imageMap[className]?.[subject]?.[chapter];
+  
+    if (pages && pages.length > 0) {
+      console.log("✅ Found pages:", pages);
+      setImages(pages);
       setCurrentIndex(0);
     } else {
+      console.warn("⚠️ No matching pages found for your selection!");
       setImages([]);
       setCurrentIndex(0);
     }
   };
+
 
   const prevPage = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1);
   const nextPage = () =>
