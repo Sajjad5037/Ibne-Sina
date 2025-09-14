@@ -14,12 +14,12 @@ export default function Syllabus() {
     const fetchImageMap = async () => {
       try {
         const res = await fetch(
-          "https://storage.googleapis.com/ibne_sina_app/imageMap.json"
+          "https://storage.googleapis.com/ibne_sina_app/imageMap1.json"
         );
         const data = await res.json();
         setImageMap(data);
       } catch (err) {
-        console.error("Failed to load imageMap.json", err);
+        console.error("Failed to load imageMap1.json", err);
       } finally {
         setLoading(false);
       }
