@@ -29,18 +29,19 @@ export default function Syllabus() {
 
   const handleLoadPages = () => {
     if (
+      className &&
       subject &&
       chapter &&
-      className &&
-      imageMap[subject]?.[chapter]?.[className]
+      imageMap[className]?.[subject]?.[chapter]
     ) {
-      setImages(imageMap[subject][chapter][className]);
+      setImages(imageMap[className][subject][chapter]);
       setCurrentIndex(0);
     } else {
       setImages([]);
       setCurrentIndex(0);
     }
   };
+
 
   const prevPage = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1);
   const nextPage = () =>
