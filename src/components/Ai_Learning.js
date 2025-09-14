@@ -204,7 +204,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
           <div className="flex-1 flex flex-col w-full">
             
             {/* Chat messages area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 w-full">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 w-full max-h-[70vh]">
               {messages.length === 0 && (
                 <p className="text-gray-400 text-center w-full">
                   Start the conversation with your tutor...
@@ -213,7 +213,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`w-full px-4 py-2 rounded-lg max-w-full ${
+                  className={`w-full px-4 py-2 rounded-lg max-w-full break-words ${
                     msg.sender === "user"
                       ? "bg-blue-600 text-white self-end"
                       : "bg-gray-200 text-gray-800 self-start"
@@ -221,8 +221,8 @@ const ChatbotTrainerUI = ({ doctorData }) => {
                   dangerouslySetInnerHTML={{ __html: msg.text }}
                 />
               ))}
-
             </div>
+
 
             {/* Input Box */}
             <div className="p-4 bg-white border-t flex gap-2 w-full">
