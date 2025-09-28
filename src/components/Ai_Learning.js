@@ -56,6 +56,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     ]);
 
     try {
+      console.log("📄 Chapter (used as pdf_name):", chapter); // ✅ Debug print
       const response = await fetch(
         "https://usefulapis-production.up.railway.app/start-session-ibne-sina",
         {
