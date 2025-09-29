@@ -15,16 +15,40 @@ const AI_evaluator = ({ doctorData }) => {
   const [chatLog, setChatLog] = useState([]); // Q/A session history
 
   // Fetch dropdown data from backend
+  // Step 1: Fetch subjects on mount
   useEffect(() => {
-    fetch("https://usefulapis-production.up.railway.app/api/form-data-ibne-sina")
+    fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
       .then((res) => res.json())
-      .then((data) => {
-        setSubjectOptions(data.subjects || []);
-        setPdfOptions(data.pdfs || []);
-        setQuestionOptions(data.questions || []);
-      })
-      .catch((err) => console.error("Error fetching form data:", err));
+      .then((data) => setSubjects(data.subjects || data)) // handle array or object
+      .catch((err) => console.error("Error fetching subjects:", err));
   }, []);
+
+  // Step 2: Fetch PDFs when subject changes
+  useEffect(() => {
+    if (!selectedSubject) {
+      setPdfs([]);
+      setSelectedPdf("");
+      return;
+    }
+
+    fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
+      .then((res) => res.json())
+      .then((data) => setPdfs(data.pdfs || data))
+      .catch((err) => console.error("Error fetching PDFs:", err));
+  }, [selectedSubject]);
+
+  // Step 3: Fetch questions when PDF changes
+  useEffect(() => {
+    if (!selectedPdf) {
+      setQuestions([]);
+      return;
+    }
+
+    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
+      .then((res) => res.json())
+      .then((data) => setQuestions(data.questions || data))
+      .catch((err) => console.error("Error fetching questions:", err));
+  }, [selectedPdf]);
 
   const handleFinish = async () => {
     // --- Debug log to check doctorData ---
@@ -170,16 +194,11 @@ const AI_evaluator = ({ doctorData }) => {
           <label className="text-sm font-medium text-gray-700 mb-1">
             Subject
           </label>
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select Subject</option>
-            {subjectOptions.map((subj, idx) => (
-              <option key={idx} value={subj}>
-                {subj}
-              </option>
+          {/* Subject Dropdown */}
+          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
+            <option value="">-- Select Subject --</option>
+            {subjects.map((subj, idx) => (
+              <option key={idx} value={subj}>{subj}</option>
             ))}
           </select>
         </div>
@@ -189,22 +208,11 @@ const AI_evaluator = ({ doctorData }) => {
           <label className="text-sm font-medium text-gray-700 mb-1">
             PDF name
           </label>
-          <select
-            value={selectedPdf}
-            onChange={(e) => setSelectedPdf(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select PDF</option>
-            {pdfOptions.map((pdf, idx) => {
-              // Extract file name from URL
-              let fileName = pdf.split("/").pop();   // page_5.png
-              fileName = fileName.split(".")[0];     // page_5
-              return (
-                <option key={idx} value={pdf}>
-                  {fileName}
-                </option>
-              );
-            })}
+          <select value={selectedPdf} onChange={(e) => setSelectedPdf(e.target.value)} disabled={!selectedSubject}>
+            <option value="">-- Select PDF --</option>
+            {pdfs.map((pdf, idx) => (
+              <option key={idx} value={pdf}>{pdf}</option>
+            ))}
           </select>
         </div>
 
@@ -217,9 +225,10 @@ const AI_evaluator = ({ doctorData }) => {
             value={selectedQuestion}
             onChange={(e) => setSelectedQuestion(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!selectedPdf} // disable until PDF is selected
           >
             <option value="">Select Question</option>
-            {questionOptions.map((q, idx) => (
+            {questions.map((q, idx) => (
               <option key={idx} value={q}>
                 {q}
               </option>
