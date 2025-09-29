@@ -249,21 +249,66 @@ const StudentReport = ({ doctorData }) => {
             >
               <thead style={{ backgroundColor: "#007bff", color: "#fff" }}>
                 <tr>
-                  <th style={{ padding: "12px" }}>PDF Name</th>
-                  <th style={{ padding: "12px" }}>Preparedness</th>
-                  <th style={{ padding: "12px" }}>Subject</th>
+                  <th
+                    style={{
+                      padding: "12px",
+                      textAlign: "left",
+                      width: "40%",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    PDF Name
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px",
+                      textAlign: "left",
+                      width: "30%",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    Preparedness
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px",
+                      textAlign: "left",
+                      width: "30%",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    Subject
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {reportData.map((item, idx) => (
                   <tr key={idx} style={{ backgroundColor: "#fafafa" }}>
-                    <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid #e0e0e0",
+                        verticalAlign: "middle",
+                      }}
+                    >
                       {item.pdf_name}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid #e0e0e0",
+                        verticalAlign: "middle",
+                      }}
+                    >
                       {item.preparedness}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid #e0e0e0",
+                        verticalAlign: "middle",
+                      }}
+                    >
                       {item.subject}
                     </td>
                   </tr>
@@ -273,6 +318,7 @@ const StudentReport = ({ doctorData }) => {
           </div>
         </div>
       )}
+
 
       {/* Report 2: Missing questions */}
       {missingQuestions.length > 0 && (
