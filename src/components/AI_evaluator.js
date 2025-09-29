@@ -25,19 +25,22 @@ const AI_evaluator = ({ doctorData }) => {
       })
       .catch((err) => console.error("Error fetching form data:", err));
   }, []);
-  const handleEvaluate = () => {
+  
+  const handleEvaluate = async () => {
+    // --- Step 1: Validate selections ---
     if (!selectedSubject || !selectedPdf || !selectedQuestion) {
       alert("Please select a subject, PDF, and question first.");
       return;
     }
-
+  
+    // --- Step 2: Prepare FormData ---
     const formData = new FormData();
     formData.append("subject", selectedSubject);
     formData.append("pdf", selectedPdf);
     formData.append("question", selectedQuestion);
-
+  
     let studentAnswer = "";
-
+  
     if (inputMode === "image" && uploadedImage) {
       formData.append("image", uploadedImage);
       studentAnswer = `[Image: ${uploadedImage.name}]`;
@@ -48,27 +51,46 @@ const AI_evaluator = ({ doctorData }) => {
       alert("Please provide an answer before evaluating.");
       return;
     }
-
-    // Add student's answer to chat
+  
+    // --- Step 3: Add student's answer to chat log ---
     setChatLog((prev) => [...prev, { sender: "student", message: studentAnswer }]);
-
-   fetch("https://usefulapis-production.up.railway.app/api/evaluate_ibne_sina", {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setChatLog((prev) => [
-          ...prev,
-          { sender: "ai", message: `✅ Student Answer: ${data.student_answer}` },
-          { sender: "ai", message: `📘 Correct Answer: ${data.correct_answer}` },
-          { sender: "ai", message: `📝 Feedback: ${data.evaluation}` },
-        ]);
-      })
-      .catch((err) => console.error("Error evaluating:", err));
-
-
-    // reset inputs
+  
+    // --- Step 4: Send request to backend ---
+    try {
+      const response = await fetch(
+        "https://usefulapis-production.up.railway.app/api/evaluate_ibne_sina",
+        { method: "POST", body: formData }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error evaluating:", errorData);
+        alert(errorData.detail || "Error evaluating the answer.");
+        return;
+      }
+  
+      const data = await response.json();
+  
+      // --- Step 5: Update chat log with AI evaluation ---
+      setChatLog((prev) => [
+        ...prev,
+        { sender: "ai", message: `✅ Student Answer: ${data.student_answer}` },
+        { sender: "ai", message: `📘 Correct Answer: ${data.correct_answer}` },
+        { sender: "ai", message: `📝 Feedback: ${data.evaluation}` },
+      ]);
+  
+      // --- Step 6: Remove question if student passed ---
+      if (data.passed) {
+        setQuestions((prev) => prev.filter((q) => q !== selectedQuestion));
+        setSelectedQuestion(""); // reset selection
+      }
+  
+    } catch (err) {
+      console.error("Error evaluating:", err);
+      alert("Failed to evaluate the answer. Please try again.");
+    }
+  
+    // --- Step 7: Reset input fields ---
     setUserInput("");
     setUploadedImage(null);
   };
