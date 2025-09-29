@@ -315,7 +315,7 @@ const AI_evaluator = ({ doctorData }) => {
       </button>
       <button
         onClick={handleFinish} // your finish logic
-        disabled={questionOptions.length > 100} // enabled only when all questions cleared
+        disabled={false} // enabled only when all questions cleared
         className={`px-4 py-2 rounded-lg font-medium shadow ${
           questionOptions.length > 0
             ? "bg-gray-300 text-gray-600 cursor-not-allowed" // disabled style
