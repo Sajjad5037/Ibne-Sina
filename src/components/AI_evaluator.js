@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const AI_evaluator = ({ doctorData }) => {
+const PdfEvaluator = ({ doctorData }) => {
   const [pdfOptions, setPdfOptions] = useState([]);
   const [questionOptions, setQuestionOptions] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState("");
@@ -118,4 +118,4 @@ const AI_evaluator = ({ doctorData }) => {
   );
 };
 
-export default AI_evaluator;
+export default PdfEvaluator;
