@@ -21,15 +21,14 @@ const StudentReport = ({ doctorData }) => {
   try {
     // 1️⃣ Fetch completed reflections
     const response = await fetch(
-      "https://usefulapis-production.up.railway.app/student_report",
+      "https://usefulapis-production.up.railway.app/student_report_ibne_sina",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: doctorData.id,
-          from_date: fromDate,
-          to_date: toDate,
-          subject: subject,
+          student_id: doctorData.id,       // student ID
+          student_name: doctorData.name,   // student name
+          subject: subject                 // selected subject
         }),
       }
     );
