@@ -5,6 +5,10 @@ const AI_evaluator = ({ doctorData }) => {
   const [pdfOptions, setPdfOptions] = useState([]);
   const [questionOptions, setQuestionOptions] = useState([]);
 
+  const [pdfs, setPdfs] = useState([]);  
+  const [subjects, setSubjects] = useState([]);  
+  const [questions, setQuestions] = useState([]); 
+
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedPdf, setSelectedPdf] = useState("");
   const [selectedQuestion, setSelectedQuestion] = useState("");
