@@ -262,6 +262,17 @@ const AI_evaluator = ({ doctorData }) => {
       >
         Submit Answer
       </button>
+      <button
+        onClick={handleFinish} // your finish logic
+        disabled={questionOptions.length > 0} // enabled only when all questions cleared
+        className={`px-4 py-2 rounded-lg font-medium shadow ${
+          questionOptions.length > 0
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed" // disabled style
+            : "bg-green-600 hover:bg-green-700 text-white" // enabled style
+        }`}
+      >
+        Finish
+      </button>    
     </div>
   );
 };
