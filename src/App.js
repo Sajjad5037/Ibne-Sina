@@ -8,7 +8,7 @@ import EditDoctor from "./components/EditDoctorPage";
 import ViewDoctors from "./components/ViewDoctors";
 import DeleteDoctor from "./components/DeleteDoctor";
 import Syllabus from "./components/Syllabus";
-import ChatbotTrainerUI_sociology from "./components/ChatbotTrainerUI_sociology";
+import AI_evaluator from "./components/AI_evaluator";
 import Ai_Learning from "./components/Ai_Learning";
 import AiAvatar from "./components/AiAvatar";
 import StudentReport from "./components/StudentReport";
@@ -146,7 +146,7 @@ function App() {
           />
           <Route
             path="ai_evaluator"
-            element={<ChatbotTrainerUI_sociology doctorData={doctorData} />}
+            element={<AI_evaluator doctorData={doctorData} />}
           />
           <Route
             path="Ai_Learning"
