@@ -28,9 +28,14 @@ const AI_evaluator = ({ doctorData }) => {
 
   const handleFinish = async () => {
     // --- Debug log to check doctorData ---
-    console.log("[DEBUG] doctorData:", doctorData);
-    console.log("[DEBUG] student_id:", doctorData?.id);
-    console.log("[DEBUG] student_name:", doctorData?.name);
+    console.log("[DEBUG] Frontend variables for finish_session:");
+    console.log(
+      "selectedSubject =", selectedSubject || "[MISSING]",
+      "| selectedPdf =", selectedPdf || "[MISSING]",
+      "| student_id =", doctorData?.id ?? "[MISSING]",
+      "| student_name =", doctorData?.name ?? "[MISSING]",
+      "| preparedness =", "Well prepared"
+    );
   
     // --- Prepare payload ---
     const payload = {
