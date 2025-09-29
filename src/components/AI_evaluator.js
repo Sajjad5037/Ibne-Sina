@@ -8,6 +8,7 @@ const AI_evaluator = ({ doctorData }) => {
   const [inputMode, setInputMode] = useState("text"); // "text" or "image"
   const [userInput, setUserInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [chatLog, setChatLog] = useState([]); // store Q/A session
 
   // Fetch dropdown data from backend
   useEffect(() => {
@@ -23,25 +24,45 @@ const AI_evaluator = ({ doctorData }) => {
   }, []);
 
   const handleEvaluate = () => {
-    console.log("Evaluating:", selectedPdf, selectedQuestion, inputMode);
+    if (!selectedPdf || !selectedQuestion) {
+      alert("Please select a PDF and question first.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("pdf", selectedPdf);
     formData.append("question", selectedQuestion);
 
+    let studentAnswer = "";
+
     if (inputMode === "image" && uploadedImage) {
       formData.append("image", uploadedImage);
+      studentAnswer = `[Image: ${uploadedImage.name}]`;
     } else if (inputMode === "text" && userInput.trim()) {
       formData.append("text", userInput);
+      studentAnswer = userInput;
+    } else {
+      alert("Please provide an answer before evaluating.");
+      return;
     }
+
+    // Add student's answer to chat log
+    setChatLog((prev) => [...prev, { sender: "student", message: studentAnswer }]);
 
     fetch("http://localhost:5000/api/evaluate", {
       method: "POST",
       body: formData,
     })
       .then((res) => res.json())
-      .then((data) => console.log("Evaluation result:", data))
+      .then((data) => {
+        const aiResponse = `Marks: ${data.marks}\nNotes: ${data.notes}`;
+        setChatLog((prev) => [...prev, { sender: "ai", message: aiResponse }]);
+      })
       .catch((err) => console.error("Error evaluating:", err));
+
+    // reset input
+    setUserInput("");
+    setUploadedImage(null);
   };
 
   const handleImageUpload = (e) => {
@@ -53,62 +74,7 @@ const AI_evaluator = ({ doctorData }) => {
 
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
-      {/* Input Mode Selector */}
-      <div className="flex gap-6 mb-4">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <input
-            type="radio"
-            name="inputMode"
-            value="text"
-            checked={inputMode === "text"}
-            onChange={() => {
-              setInputMode("text");
-              setUploadedImage(null);
-            }}
-          />
-          Write Text
-        </label>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <input
-            type="radio"
-            name="inputMode"
-            value="image"
-            checked={inputMode === "image"}
-            onChange={() => {
-              setInputMode("image");
-              setUserInput("");
-            }}
-          />
-          Upload Image
-        </label>
-      </div>
-
-      {/* Conditionally Render Input */}
-      {inputMode === "text" ? (
-        <textarea
-          className="w-full p-2 border rounded-lg mb-4"
-          rows="4"
-          placeholder="Type your answer here..."
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-        />
-      ) : (
-        <div className="flex flex-col mb-4">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="text-sm"
-          />
-          {uploadedImage && (
-            <p className="text-xs text-gray-600 mt-1">
-              Selected: {uploadedImage.name}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Row with PDF, Question, Evaluate */}
+      {/* Row with PDF and Question */}
       <div className="flex items-end gap-6">
         {/* PDF Name */}
         <div className="flex flex-col">
@@ -147,16 +113,98 @@ const AI_evaluator = ({ doctorData }) => {
             ))}
           </select>
         </div>
-
-        {/* Evaluate Button */}
-        <button
-          onClick={handleEvaluate}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow"
-          disabled={!selectedPdf || !selectedQuestion}
-        >
-          Evaluate
-        </button>
       </div>
+
+      {/* Chat Window */}
+      <div className="border rounded-lg bg-white p-4 h-64 overflow-y-auto shadow-inner">
+        {chatLog.length === 0 ? (
+          <p className="text-gray-400 text-sm text-center">
+            No evaluations yet. Submit your answer to begin.
+          </p>
+        ) : (
+          chatLog.map((entry, idx) => (
+            <div
+              key={idx}
+              className={`mb-3 ${
+                entry.sender === "student" ? "text-right" : "text-left"
+              }`}
+            >
+              <span
+                className={`inline-block px-3 py-2 rounded-lg text-sm ${
+                  entry.sender === "student"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {entry.message}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Input Mode Selector */}
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="radio"
+            name="inputMode"
+            value="text"
+            checked={inputMode === "text"}
+            onChange={() => {
+              setInputMode("text");
+              setUploadedImage(null);
+            }}
+          />
+          Write Text
+        </label>
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="radio"
+            name="inputMode"
+            value="image"
+            checked={inputMode === "image"}
+            onChange={() => {
+              setInputMode("image");
+              setUserInput("");
+            }}
+          />
+          Upload Image
+        </label>
+      </div>
+
+      {/* Conditionally Render Input */}
+      {inputMode === "text" ? (
+        <textarea
+          className="w-full p-2 border rounded-lg"
+          rows="3"
+          placeholder="Type your answer here..."
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+        />
+      ) : (
+        <div className="flex flex-col">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="text-sm"
+          />
+          {uploadedImage && (
+            <p className="text-xs text-gray-600 mt-1">
+              Selected: {uploadedImage.name}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Evaluate Button */}
+      <button
+        onClick={handleEvaluate}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+      >
+        Submit Answer
+      </button>
     </div>
   );
 };
