@@ -20,15 +20,27 @@ const StudentReport = ({ doctorData }) => {
           "https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina"
         );
         if (!response.ok) throw new Error("Failed to fetch subjects");
-
-        const subjects = await response.json(); // expected: ["sociology", "Economics", ...]
+  
+        const data = await response.json();
+  
+        // Handle both array and object responses
+        let subjects = [];
+        if (Array.isArray(data)) {
+          subjects = data;
+        } else if (data.subjects && Array.isArray(data.subjects)) {
+          subjects = data.subjects;
+        } else {
+          console.warn("Unexpected response format for subjects:", data);
+        }
+  
+        console.log("Fetched subjects:", subjects);
         setSubjectOptions(subjects);
       } catch (err) {
         console.error("Error fetching subjects:", err);
         setSubjectOptions([]);
       }
     };
-
+  
     fetchSubjects();
   }, []);
 
