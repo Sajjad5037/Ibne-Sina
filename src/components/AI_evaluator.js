@@ -42,7 +42,7 @@ const AI_evaluator = ({ doctorData }) => {
   
     try {
       const response = await fetch(
-        "https://usefulapis-production.up.railway.app/api/finish_session",
+        "https://usefulapis-production.up.railway.app/api/finish_session_ibne_sina",
         {
           method: "POST",
           headers: {
