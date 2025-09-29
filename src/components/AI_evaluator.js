@@ -81,9 +81,12 @@ const AI_evaluator = ({ doctorData }) => {
   
       // --- Step 6: Remove question if student passed ---
       if (data.passed) {
-        setQuestions((prev) => prev.filter((q) => q !== selectedQuestion));
+        setQuestionOptions((prev) =>
+          prev.filter((q) => q !== selectedQuestion)
+        );
         setSelectedQuestion(""); // reset selection
       }
+
   
     } catch (err) {
       console.error("Error evaluating:", err);
