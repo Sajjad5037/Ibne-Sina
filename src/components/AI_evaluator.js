@@ -109,11 +109,16 @@ const AI_evaluator = ({ doctorData }) => {
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select PDF</option>
-            {pdfOptions.map((pdf, idx) => (
-              <option key={idx} value={pdf}>
-                {pdf}
-              </option>
-            ))}
+            {pdfOptions.map((pdf, idx) => {
+              // Extract file name from URL
+              let fileName = pdf.split("/").pop();   // page_5.png
+              fileName = fileName.split(".")[0];     // page_5
+              return (
+                <option key={idx} value={pdf}>
+                  {fileName}
+                </option>
+              );
+            })}
           </select>
         </div>
 
