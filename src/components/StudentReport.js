@@ -8,7 +8,7 @@ const StudentReport = ({ doctorData }) => {
   const [missingQuestions, setMissingQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [subject, setSubject] = useState("");
+  
   const [subjectOptions, setSubjectOptions] = useState([]);
 
   useEffect(() => {
