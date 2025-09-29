@@ -1,35 +1,38 @@
 import React, { useEffect, useState } from "react";
 
 const AI_evaluator = ({ doctorData }) => {
+  const [subjectOptions, setSubjectOptions] = useState([]);
   const [pdfOptions, setPdfOptions] = useState([]);
   const [questionOptions, setQuestionOptions] = useState([]);
+
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedPdf, setSelectedPdf] = useState("");
   const [selectedQuestion, setSelectedQuestion] = useState("");
+
   const [inputMode, setInputMode] = useState("text"); // "text" or "image"
   const [userInput, setUserInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [chatLog, setChatLog] = useState([]); // store Q/A session
+  const [chatLog, setChatLog] = useState([]); // Q/A session history
 
   // Fetch dropdown data from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/pdfs")
+    fetch("http://localhost:5000/api/form-data")
       .then((res) => res.json())
-      .then((data) => setPdfOptions(data))
-      .catch((err) => console.error("Error fetching PDFs:", err));
-
-    fetch("http://localhost:5000/api/questions")
-      .then((res) => res.json())
-      .then((data) => setQuestionOptions(data))
-      .catch((err) => console.error("Error fetching Questions:", err));
+      .then((data) => {
+        setSubjectOptions(data.subjects || []);
+        setPdfOptions(data.pdfs || []);
+        setQuestionOptions(data.questions || []);
+      })
+      .catch((err) => console.error("Error fetching form data:", err));
   }, []);
-
   const handleEvaluate = () => {
-    if (!selectedPdf || !selectedQuestion) {
-      alert("Please select a PDF and question first.");
+    if (!selectedSubject || !selectedPdf || !selectedQuestion) {
+      alert("Please select a subject, PDF, and question first.");
       return;
     }
 
     const formData = new FormData();
+    formData.append("subject", selectedSubject);
     formData.append("pdf", selectedPdf);
     formData.append("question", selectedQuestion);
 
@@ -46,7 +49,7 @@ const AI_evaluator = ({ doctorData }) => {
       return;
     }
 
-    // Add student's answer to chat log
+    // Add student's answer to chat
     setChatLog((prev) => [...prev, { sender: "student", message: studentAnswer }]);
 
     fetch("http://localhost:5000/api/evaluate", {
@@ -60,7 +63,7 @@ const AI_evaluator = ({ doctorData }) => {
       })
       .catch((err) => console.error("Error evaluating:", err));
 
-    // reset input
+    // reset inputs
     setUserInput("");
     setUploadedImage(null);
   };
@@ -74,8 +77,27 @@ const AI_evaluator = ({ doctorData }) => {
 
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
-      {/* Row with PDF and Question */}
+      {/* Row with Subject, PDF and Question */}
       <div className="flex items-end gap-6">
+        {/* Subject */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">
+            Subject
+          </label>
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select Subject</option>
+            {subjectOptions.map((subj, idx) => (
+              <option key={idx} value={subj}>
+                {subj}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* PDF Name */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">
@@ -130,7 +152,7 @@ const AI_evaluator = ({ doctorData }) => {
               }`}
             >
               <span
-                className={`inline-block px-3 py-2 rounded-lg text-sm ${
+                className={`inline-block px-3 py-2 rounded-lg text-sm whitespace-pre-line ${
                   entry.sender === "student"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-200 text-gray-800"
