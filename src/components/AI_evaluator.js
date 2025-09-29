@@ -40,10 +40,10 @@ const AI_evaluator = ({ doctorData }) => {
     // --- Prepare payload ---
     const payload = {
       subject: selectedSubject,
-      student_id: doctorData?.id,       // student id
-      student_name: doctorData?.name,   // student name
+      student_id: String(doctorData?.id),       // convert to string
+      student_name: doctorData?.name,
       pdf: selectedPdf,
-      preparedness: "Well prepared"     // send this to backend
+      preparedness: "Well prepared"
     };
   
     try {
