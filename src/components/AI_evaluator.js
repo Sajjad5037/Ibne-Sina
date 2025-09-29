@@ -52,16 +52,21 @@ const AI_evaluator = ({ doctorData }) => {
     // Add student's answer to chat
     setChatLog((prev) => [...prev, { sender: "student", message: studentAnswer }]);
 
-    fetch("http://localhost:5000/api/evaluate", {
+   fetch("https://usefulapis-production.up.railway.app/api/evaluate_ibne_sina", {
       method: "POST",
       body: formData,
     })
       .then((res) => res.json())
       .then((data) => {
-        const aiResponse = `Marks: ${data.marks}\nNotes: ${data.notes}`;
-        setChatLog((prev) => [...prev, { sender: "ai", message: aiResponse }]);
+        setChatLog((prev) => [
+          ...prev,
+          { sender: "ai", message: `✅ Student Answer: ${data.student_answer}` },
+          { sender: "ai", message: `📘 Correct Answer: ${data.correct_answer}` },
+          { sender: "ai", message: `📝 Feedback: ${data.evaluation}` },
+        ]);
       })
       .catch((err) => console.error("Error evaluating:", err));
+
 
     // reset inputs
     setUserInput("");
