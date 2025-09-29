@@ -29,17 +29,33 @@ const AI_evaluator = ({ doctorData }) => {
 
   // Step 2: Fetch PDFs when subject changes
   useEffect(() => {
-    if (!selectedSubject) {
-      setPdfs([]);
-      setSelectedPdf("");
-      return;
-    }
+  if (!selectedSubject) {
+    setPdfs([]);
+    setSelectedPdf("");
+    return;
+  }
 
-    fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
-      .then((res) => res.json())
-      .then((data) => setPdfs(data.pdfs || data))
-      .catch((err) => console.error("Error fetching PDFs:", err));
-  }, [selectedSubject]);
+  fetch(
+    `https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(
+      selectedSubject
+    )}`
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      const urls = data.pdfs || data;
+      // Extract filenames from URLs
+      const filenames = urls.map((url) => {
+        try {
+          return url.split("/").pop(); // gets the last part, e.g., "page_5.png"
+        } catch {
+          return url;
+        }
+      });
+      setPdfs(filenames);
+    })
+    .catch((err) => console.error("Error fetching PDFs:", err));
+}, [selectedSubject]);
+
 
   // Step 3: Fetch questions when PDF changes
   useEffect(() => {
