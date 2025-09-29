@@ -25,11 +25,11 @@ const StudentReport = ({ doctorData }) => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: doctorData.id,       // student ID
-          student_name: doctorData.name,   // student name
-          subject: subject                 // selected subject
-        }),
+       body: JSON.stringify({
+        student_id: String(doctorData.id),   // convert number → string
+        student_name: doctorData.name,
+        subject: subject
+      }),
       }
     );
 
