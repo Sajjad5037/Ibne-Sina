@@ -210,23 +210,19 @@ const StudentReport = ({ doctorData }) => {
             >
               <thead style={{ backgroundColor: "#007bff", color: "#fff" }}>
                 <tr>
-                  <th style={{ padding: "12px" }}>Date</th>
-                  <th style={{ padding: "12px" }}>Question</th>
+                  <th style={{ padding: "12px" }}>PDF Name</th>
                   <th style={{ padding: "12px" }}>Preparedness</th>
                   <th style={{ padding: "12px" }}>Subject</th>
                 </tr>
               </thead>
               <tbody>
-                {reportData.map((item) => (
-                  <tr key={item.id} style={{ backgroundColor: "#fafafa" }}>
+                {reportData.map((item, idx) => (
+                  <tr key={idx} style={{ backgroundColor: "#fafafa" }}>
                     <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
-                      {new Date(item.created_at).toLocaleString()}
+                      {item.pdf_name}
                     </td>
                     <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
-                      {item.question_text}
-                    </td>
-                    <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
-                      {item.preparedness_level}
+                      {item.preparedness}
                     </td>
                     <td style={{ padding: "10px", borderBottom: "1px solid #e0e0e0" }}>
                       {item.subject}
