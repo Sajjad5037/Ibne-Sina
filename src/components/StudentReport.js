@@ -45,71 +45,48 @@ const StudentReport = ({ doctorData }) => {
   }, []);
 
   const handleFetchReport = async () => {
-  if (!fromDate || !toDate || !subject) {
-    alert("Please select From Date, To Date, and Subject.");
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    // 1️⃣ Fetch completed reflections
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/student_report_ibne_sina",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-        student_id: String(doctorData.id),   // convert number → string
-        student_name: doctorData.name,
-        subject: subject
-      }),
-      }
-    );
-
-    if (!response.ok) throw new Error("Failed to fetch report");
-    const reflections = await response.json();
-    setReportData(reflections);
-
-    // 2️⃣ Fetch all questions
-    const questionsRes = await fetch(
-      "https://usefulapis-production.up.railway.app/questions_a_level"
-    );
-    if (!questionsRes.ok) throw new Error("Failed to fetch questions");
-    const allQuestions = await questionsRes.json();
-
-    // 🔍 Debug logs
-    console.log("All Questions:", allQuestions);
-    console.log("Reflections:", reflections);
-
-    // 3️⃣ Normalize answered question_texts
-    const answeredTexts = new Set(
-      reflections.map((r) => r.question_text.trim().toLowerCase())
-    );
-
-    console.log("Answered:", answeredTexts);
-    console.log("Selected Subject:", subject);
-
-    // 4️⃣ Filter missing questions (normalize subject + question text)
-    const missing = allQuestions.filter(
-      (q) =>
-        q.subject.trim().toLowerCase() === subject.trim().toLowerCase() &&
-        !answeredTexts.has(q.question_text.trim().toLowerCase())
-    );
-
-    console.log("Missing:", missing);
-
-    setMissingQuestions(missing);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to fetch report. Please try again later.");
-    setReportData([]);
-    setMissingQuestions([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!fromDate || !toDate || !subject) {
+      alert("Please select From Date, To Date, and Subject.");
+      return;
+    }
+  
+    setLoading(true);
+    setError(null);
+  
+    try {
+      // Fetch completed reflections from backend
+      const response = await fetch(
+        "https://usefulapis-production.up.railway.app/student_report_ibne_sina",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_id: String(doctorData.id), // ensure string type
+            student_name: doctorData.name,
+            subject: subject,
+          }),
+        }
+      );
+  
+      if (!response.ok) throw new Error("Failed to fetch report");
+  
+      const reflections = await response.json();
+  
+      console.log("Fetched reflections:", reflections);
+  
+      setReportData(reflections);
+  
+      // Clear missing questions as we no longer calculate them
+      setMissingQuestions([]);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch report. Please try again later.");
+      setReportData([]);
+      setMissingQuestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
