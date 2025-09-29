@@ -16,7 +16,7 @@ const AI_evaluator = ({ doctorData }) => {
 
   // Fetch dropdown data from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/form-data")
+    fetch("https://usefulapis-production.up.railway.app/api/form-data-ibne-sina")
       .then((res) => res.json())
       .then((data) => {
         setSubjectOptions(data.subjects || []);
