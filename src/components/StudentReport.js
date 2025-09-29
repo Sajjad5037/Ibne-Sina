@@ -8,6 +8,27 @@ const StudentReport = ({ doctorData }) => {
   const [missingQuestions, setMissingQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [subject, setSubject] = useState("");
+  const [subjectOptions, setSubjectOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch(
+          "https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina"
+        );
+        if (!response.ok) throw new Error("Failed to fetch subjects");
+
+        const subjects = await response.json(); // expected: ["sociology", "Economics", ...]
+        setSubjectOptions(subjects);
+      } catch (err) {
+        console.error("Error fetching subjects:", err);
+        setSubjectOptions([]);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   const handleFetchReport = async () => {
   if (!fromDate || !toDate || !subject) {
@@ -154,9 +175,13 @@ const StudentReport = ({ doctorData }) => {
             }}
           >
             <option value="">-- Select Subject --</option>
-            <option value="sociology">sociology</option>
-            <option value="Economics">Economics</option>
+            {subjectOptions.map((subj, idx) => (
+              <option key={idx} value={subj}>
+                {subj}
+              </option>
+            ))}
           </select>
+
         </div>
 
         <button
