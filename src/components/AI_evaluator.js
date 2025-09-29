@@ -25,6 +25,56 @@ const AI_evaluator = ({ doctorData }) => {
       })
       .catch((err) => console.error("Error fetching form data:", err));
   }, []);
+
+  const handleFinish = async () => {
+    // --- Debug log to check doctorData ---
+    console.log("[DEBUG] doctorData:", doctorData);
+    console.log("[DEBUG] student_id:", doctorData?.id);
+    console.log("[DEBUG] student_name:", doctorData?.name);
+  
+    // --- Prepare payload ---
+    const payload = {
+      subject: selectedSubject,
+      student_id: doctorData?.id,      // student id
+      student_name: doctorData?.name,  // student name
+      pdf: selectedPdf,
+    };
+  
+    try {
+      const response = await fetch(
+        "https://usefulapis-production.up.railway.app/api/finish_session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error finishing session:", errorData);
+        alert(errorData.detail || "Failed to finish session.");
+        return;
+      }
+  
+      const data = await response.json();
+  
+      // --- Show confirmation ---
+      alert(data.message || "Session successfully saved!");
+      // Optionally, reset states
+      setChatLog([]);
+      setSelectedSubject("");
+      setSelectedPdf("");
+      setSelectedQuestion("");
+      setQuestionOptions([]);
+    } catch (err) {
+      console.error("Error finishing session:", err);
+      alert("Failed to finish session. Please try again.");
+    }
+  };
+
   
   const handleEvaluate = async () => {
     // --- Step 1: Validate selections ---
