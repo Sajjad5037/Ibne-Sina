@@ -18,49 +18,50 @@ const AI_evaluator = ({ doctorData }) => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [chatLog, setChatLog] = useState([]); // Q/A session history
 
-  // Fetch dropdown data from backend
-  // Step 1: Fetch subjects on mount
-  useEffect(() => {
-    fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
-      .then((res) => res.json())
-      .then((data) => setSubjects(data.subjects || data)) // handle array or object
-      .catch((err) => console.error("Error fetching subjects:", err));
-  }, []);
+  // --- Step 1: Fetch subjects on mount ---
+useEffect(() => {
+  fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
+    .then((res) => res.json())
+    .then((data) => setSubjects(data.subjects || data)) // handle array or object
+    .catch((err) => console.error("Error fetching subjects:", err));
+}, []);
 
-  // Step 2: Fetch PDFs when subject changes
-  useEffect(() => {
-    if (!selectedSubject) {
-      setPdfs([]);
-      setSelectedPdf("");
-      return;
-    }
-  
-    fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const urls = data.pdfs || data;
-        const pdfMap = urls.map((url) => ({
-          label: url.split("/").pop(), // what the user sees
-          value: url,                  // full URL for backend
-        }));
-        setPdfs(pdfMap);
-      })
-      .catch((err) => console.error("Error fetching PDFs:", err));
-  }, [selectedSubject]);
+// --- Step 2: Fetch PDFs when subject changes ---
+useEffect(() => {
+  if (!selectedSubject) {
+    setPdfs([]);
+    setSelectedPdf(""); // clear selected PDF
+    return;
+  }
 
+  fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const urls = data.pdfs || data;
 
-  // Step 3: Fetch questions when PDF changes
-   useEffect(() => {
-    if (!selectedPdf) {
-      setQuestions([]);
-      return;
-    }
-  
-    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
-      .then((res) => res.json())
-      .then((data) => setQuestions(data.questions || data))
-      .catch((err) => console.error("Error fetching questions:", err));
-  }, [selectedPdf]);
+      // Store both filename (label) and full URL (value)
+      const pdfMap = urls.map((url) => ({
+        label: url.split("/").pop(), // what user sees
+        value: url,                  // full URL to send to backend
+      }));
+
+      setPdfs(pdfMap);
+    })
+    .catch((err) => console.error("Error fetching PDFs:", err));
+}, [selectedSubject]);
+
+// --- Step 3: Fetch questions when PDF changes ---
+useEffect(() => {
+  if (!selectedPdf) {
+    setQuestions([]);
+    return;
+  }
+
+  fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
+    .then((res) => res.json())
+    .then((data) => setQuestions(data.questions || data))
+    .catch((err) => console.error("Error fetching questions:", err));
+}, [selectedPdf]);
 
   
   
@@ -202,60 +203,52 @@ const AI_evaluator = ({ doctorData }) => {
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
       {/* Row with Subject, PDF and Question */}
-      <div className="flex items-end gap-6">
-        {/* Subject */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Subject
-          </label>
-          {/* Subject Dropdown */}
-          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
-            <option value="">-- Select Subject --</option>
-            {subjects.map((subj, idx) => (
-              <option key={idx} value={subj}>{subj}</option>
-            ))}
-          </select>
-        </div>
+      {/* Row with Subject, PDF, and Question */}
+<div className="flex items-end gap-6">
 
-        {/* PDF Name */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            PDF name
-          </label>
-          <select
-            value={selectedPdf}
-            onChange={(e) => setSelectedPdf(e.target.value)}
-          >
-            <option value="">Select PDF</option>
-            {pdfs.map((pdf) => (
-              <option key={pdf.value} value={pdf.value}>
-                {pdf.label}
-              </option>
-            ))}
-          </select>
+  {/* Subject */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
+    <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
+      <option value="">-- Select Subject --</option>
+      {subjects.map((subj, idx) => (
+        <option key={idx} value={subj}>{subj}</option>
+      ))}
+    </select>
+  </div>
 
-        </div>
+  {/* PDF Name */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
+    <select value={selectedPdf} onChange={(e) => setSelectedPdf(e.target.value)}>
+      <option value="">Select PDF</option>
+      {pdfs.map((pdf) => (
+        <option key={pdf.value} value={pdf.value}>
+          {pdf.label}
+        </option>
+      ))}
+    </select>
+  </div>
 
-        {/* Question Text */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Question Text
-          </label>
-          <select
-            value={selectedQuestion}
-            onChange={(e) => setSelectedQuestion(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={!selectedPdf} // disable until PDF is selected
-          >
-            <option value="">Select Question</option>
-            {questions.map((q, idx) => (
-              <option key={idx} value={q}>
-                {q}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+  {/* Question Text */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Question Text</label>
+    <select
+      value={selectedQuestion}
+      onChange={(e) => setSelectedQuestion(e.target.value)}
+      className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      disabled={!selectedPdf} // disable until PDF is selected
+    >
+      <option value="">Select Question</option>
+      {questions.map((q, idx) => (
+        <option key={idx} value={q}>
+          {q}
+        </option>
+      ))}
+    </select>
+  </div>
+
+</div>
 
       {/* Chat Window */}
       <div className="border rounded-lg bg-white p-4 h-64 overflow-y-auto shadow-inner">
