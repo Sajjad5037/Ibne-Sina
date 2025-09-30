@@ -208,35 +208,41 @@ export default function SyllabusManager() {
       {activeTab === "delete" && (
         <div>
           <h3 className="font-semibold mb-2">Delete Syllabus Entry</h3>
+      
           {syllabus.length === 0 ? (
-            <p>No entries to delete.</p>
+            <p>No entries available to delete.</p>
           ) : (
-            <ul className="list-disc list-inside">
-              {syllabus.map((entry) => (
-                <li key={entry.id} className="flex justify-between items-center mb-1">
-                  <span>
-                    {entry.class_name} - {entry.subject} - {entry.chapter}
-                  </span>
-                  <div>
-                    <button
-                      onClick={() => setActiveTab("edit") || handleSelectEntry(entry.id)}
-                      className="mr-2 px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(entry.id)}
-                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              {/* Dropdown to select entry */}
+              <select
+                className="border px-3 py-2 rounded w-full mb-2"
+                value={selectedId || ""}
+                onChange={(e) => setSelectedId(parseInt(e.target.value))}
+              >
+                <option value="" disabled>
+                  -- Select entry to delete --
+                </option>
+                {syllabus.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    ID {entry.id}: {entry.class_name} - {entry.subject} - {entry.chapter}
+                  </option>
+                ))}
+              </select>
+      
+              {/* Delete button */}
+              {selectedId && (
+                <button
+                  onClick={() => handleDelete(selectedId)}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Delete Selected Entry
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
+
     </div>
   );
 }
