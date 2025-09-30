@@ -59,13 +59,18 @@ useEffect(() => {
 
   console.log("Fetching questions for PDF filename:", selectedPdf); // debug
 
-  fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Questions received:", data); // debug
-      setQuestions(data || []);
-    })
-    .catch((err) => console.error("Error fetching questions:", err));
+  fetch(
+  `https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`
+)
+  .then((res) => res.json())
+  .then((data) => {
+    console.log("[DEBUG] ✅ Questions received from backend:", data);
+    setQuestionOptions(Array.isArray(data) ? data : []); // ensure it's always an array
+  })
+  .catch((err) => {
+    console.error("[DEBUG] ❌ Error fetching questions:", err);
+    setQuestionOptions([]); // fallback to empty
+  });
 }, [selectedPdf]);
 
   
