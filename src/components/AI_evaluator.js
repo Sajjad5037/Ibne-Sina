@@ -181,22 +181,32 @@ useEffect(() => {
   
       // --- Step 6: Remove question if student passed ---
       if (data.passed) {
-        console.log("[DEBUG] ✅ data.passed is true");
-        console.log("[DEBUG] Selected question to remove:", selectedQuestion);
+        console.log("[DEBUG] ✅ data.passed === true");
+        console.log(`[DEBUG] Attempting to remove question: "${selectedQuestion}"`);
       
         setQuestionOptions((prev) => {
-          console.log("[DEBUG] Previous options:", prev);
+          console.log("[DEBUG] Current options:", prev);
       
           const newOptions = prev.filter((q) => q !== selectedQuestion);
-          console.log("[DEBUG] New options after filter:", newOptions);
+      
+          if (prev.length === newOptions.length) {
+            console.log(
+              `[DEBUG] ⚠️ No match found for "${selectedQuestion}" — options unchanged`
+            );
+          } else {
+            console.log(
+              `[DEBUG] ✅ Removed "${selectedQuestion}". Updated options:`,
+              newOptions
+            );
+          }
       
           return newOptions;
         });
       
         setSelectedQuestion("");
-        console.log("[DEBUG] Reset selectedQuestion to empty string");
+        console.log("[DEBUG] 🔄 Cleared selectedQuestion (reset to empty string)");
       } else {
-        console.log("[DEBUG] ❌ data.passed is false, not updating options");
+        console.log("[DEBUG] ❌ data.passed === false → keeping options and selection");
       }
 
 
