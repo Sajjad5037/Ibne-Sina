@@ -114,6 +114,11 @@ function App() {
         <Route path="/view-doctors" element={isLoggedIn ? <ViewDoctors /> : <Navigate to="/" />} />
         <Route path="/delete-doctor" element={isLoggedIn ? <DeleteDoctor /> : <Navigate to="/" />} />
         <Route path="/UserUsageDashboard" element={isLoggedIn ? <UserUsageDashboard /> : <Navigate to="/" />} />
+        <Route
+          path="/SyllabusForm"
+          element={isLoggedIn ? <SyllabusForm doctorData={doctorData} /> : <Navigate to="/" />}
+        />
+
         
 
         {/* Sociology Chatbot */}
@@ -139,10 +144,7 @@ function App() {
             path="Syllabus"
             element={<Syllabus doctorData={doctorData} />}
           />
-          <Route
-            path="SyllabusForm"
-            element={<SyllabusForm doctorData={doctorData} />}
-          />
+          
           <Route
             path="ai_evaluator"
             element={<AI_evaluator doctorData={doctorData} />}
