@@ -109,9 +109,7 @@ export default function SyllabusManager() {
         <div>
           <h3 className="font-semibold mb-2">All Syllabus Entries</h3>
           <ul className="list-disc list-inside border rounded p-2">
-            {/* Placeholder entries */}
-            <li>Class 7 - Math - Algebra</li>
-            <li>Class 8 - Science - Physics</li>
+            <li>No entries available. Will be loaded from backend later.</li>
           </ul>
         </div>
       )}
