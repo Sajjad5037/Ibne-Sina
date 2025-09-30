@@ -29,32 +29,24 @@ const AI_evaluator = ({ doctorData }) => {
 
   // Step 2: Fetch PDFs when subject changes
   useEffect(() => {
-  if (!selectedSubject) {
-    setPdfs([]);
-    setSelectedPdf("");
-    return;
-  }
-
-  fetch(
-    `https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(
-      selectedSubject
-    )}`
-  )
-    .then((res) => res.json())
-    .then((data) => {
-      const urls = data.pdfs || data;
-      // Extract filenames from URLs
-      const filenames = urls.map((url) => {
-        try {
-          return url.split("/").pop(); // gets the last part, e.g., "page_5.png"
-        } catch {
-          return url;
-        }
-      });
-      setPdfs(filenames);
-    })
-    .catch((err) => console.error("Error fetching PDFs:", err));
-}, [selectedSubject]);
+    if (!selectedSubject) {
+      setPdfs([]);
+      setSelectedPdf("");
+      return;
+    }
+  
+    fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const urls = data.pdfs || data;
+        const pdfMap = urls.map((url) => ({
+          label: url.split("/").pop(), // what the user sees
+          value: url,                  // full URL for backend
+        }));
+        setPdfs(pdfMap);
+      })
+      .catch((err) => console.error("Error fetching PDFs:", err));
+  }, [selectedSubject]);
 
 
   // Step 3: Fetch questions when PDF changes
@@ -64,14 +56,12 @@ const AI_evaluator = ({ doctorData }) => {
       return;
     }
   
-    // Reconstruct full URL
-    const fullUrl = `https://storage.googleapis.com/ibne_sina_app/${selectedPdf}`;
-  
-    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(fullUrl)}`)
+    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
       .then((res) => res.json())
       .then((data) => setQuestions(data.questions || data))
       .catch((err) => console.error("Error fetching questions:", err));
   }, [selectedPdf]);
+
   
   
     const handleFinish = async () => {
@@ -232,12 +222,18 @@ const AI_evaluator = ({ doctorData }) => {
           <label className="text-sm font-medium text-gray-700 mb-1">
             PDF name
           </label>
-          <select value={selectedPdf} onChange={(e) => setSelectedPdf(e.target.value)} disabled={!selectedSubject}>
-            <option value="">-- Select PDF --</option>
-            {pdfs.map((pdf, idx) => (
-              <option key={idx} value={pdf}>{pdf}</option>
+          <select
+            value={selectedPdf}
+            onChange={(e) => setSelectedPdf(e.target.value)}
+          >
+            <option value="">Select PDF</option>
+            {pdfs.map((pdf) => (
+              <option key={pdf.value} value={pdf.value}>
+                {pdf.label}
+              </option>
             ))}
           </select>
+
         </div>
 
         {/* Question Text */}
