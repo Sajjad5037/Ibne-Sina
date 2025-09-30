@@ -185,13 +185,21 @@ useEffect(() => {
         console.log("[DEBUG] Selected question to remove:", JSON.stringify(selectedQuestion));
       
         setQuestionOptions((prev) => {
-          console.log("[DEBUG] Previous options:", prev.map(q => JSON.stringify(q)));
-      
+          console.log("[DEBUG] Previous options:", prev);
+        
           const normalize = (str) => str.trim().replace(/\s+/g, " ");
-          const newOptions = prev.filter((q) => normalize(q) !== normalize(selectedQuestion));
-      
-          console.log("[DEBUG] New options after filter:", newOptions.map(q => JSON.stringify(q)));
-      
+        
+          // if prev is empty, fallback to the last known full list
+          const source = prev.length > 0 ? prev : allQuestions;
+        
+          console.log("[DEBUG] Source list for filtering:", source);
+        
+          const newOptions = source.filter(
+            (q) => normalize(q) !== normalize(selectedQuestion)
+          );
+        
+          console.log("[DEBUG] New options after filter:", newOptions);
+        
           return newOptions;
         });
       
