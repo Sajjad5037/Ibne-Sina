@@ -81,25 +81,31 @@ export default function SyllabusManager() {
       
           <input
             type="text"
-            name="className"
             placeholder="Class"
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
+          
           <input
             type="text"
-            name="subject"
             placeholder="Subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
+          
           <input
             type="text"
-            name="chapter"
             placeholder="Chapter"
+            value={chapter}
+            onChange={(e) => setChapter(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
+
       
           {/* Image Upload */}
-          <label className="block mb-2 font-medium">Upload Images (optional)</label>
+          <label className="block mb-2 font-medium">Upload Images (mandatory)</label>
           <input
             type="file"
             name="images"
