@@ -203,7 +203,7 @@ useEffect(() => {
           return newOptions;
         });
       
-        setSelectedQuestion("");
+        
         console.log("[DEBUG] 🔄 Cleared selectedQuestion (reset to empty string)");
       } else {
         console.log("[DEBUG] ❌ data.passed === false → keeping options and selection");
