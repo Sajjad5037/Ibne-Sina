@@ -18,6 +18,8 @@ import AiAudioLearning from "./components/AiAudioLearning";
 import ResponseAnalyzer from "./components/ResponseAnalyzer";
 import StudentDashboard from "./components/StudentDashboard";
 import SyllabusForm from "./components/SyllabusForm";
+import SyllabusManager from "./components/SyllabusManager";
+
 
 
 // --- Login Page ---
@@ -115,8 +117,8 @@ function App() {
         <Route path="/delete-doctor" element={isLoggedIn ? <DeleteDoctor /> : <Navigate to="/" />} />
         <Route path="/UserUsageDashboard" element={isLoggedIn ? <UserUsageDashboard /> : <Navigate to="/" />} />
         <Route
-          path="/SyllabusForm"
-          element={isLoggedIn ? <SyllabusForm doctorData={doctorData} /> : <Navigate to="/" />}
+          path="/SyllabusManager"
+          element={isLoggedIn ? <SyllabusManager doctorData={doctorData} /> : <Navigate to="/" />}
         />
 
         
