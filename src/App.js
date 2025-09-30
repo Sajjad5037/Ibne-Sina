@@ -20,7 +20,7 @@ import StudentDashboard from "./components/StudentDashboard";
 import SyllabusManager from "./components/SyllabusManager";
 
 
-
+ 
 // --- Login Page ---
 function LoginPage({ setIsLoggedIn, setDoctorData, setSessionToken }) {
   const [username, setUsername] = useState("");
