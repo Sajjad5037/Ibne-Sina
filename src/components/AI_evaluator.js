@@ -181,32 +181,23 @@ useEffect(() => {
   
       // --- Step 6: Remove question if student passed ---
       if (data.passed) {
-        console.log("[DEBUG] ✅ data.passed === true");
-        console.log(`[DEBUG] Attempting to remove question: "${selectedQuestion}"`);
+        console.log("[DEBUG] ✅ data.passed is true");
+        console.log("[DEBUG] Selected question to remove:", JSON.stringify(selectedQuestion));
       
         setQuestionOptions((prev) => {
-          console.log("[DEBUG] Current options:", prev);
+          console.log("[DEBUG] Previous options:", prev.map(q => JSON.stringify(q)));
       
-          const newOptions = prev.filter((q) => q !== selectedQuestion);
+          const normalize = (str) => str.trim().replace(/\s+/g, " ");
+          const newOptions = prev.filter((q) => normalize(q) !== normalize(selectedQuestion));
       
-          if (prev.length === newOptions.length) {
-            console.log(
-              `[DEBUG] ⚠️ No match found for "${selectedQuestion}" — options unchanged`
-            );
-          } else {
-            console.log(
-              `[DEBUG] ✅ Removed "${selectedQuestion}". Updated options:`,
-              newOptions
-            );
-          }
+          console.log("[DEBUG] New options after filter:", newOptions.map(q => JSON.stringify(q)));
       
           return newOptions;
         });
       
-        
-        console.log("[DEBUG] 🔄 Cleared selectedQuestion (reset to empty string)");
+        // no need to clear selection immediately — let the UI naturally reset
       } else {
-        console.log("[DEBUG] ❌ data.passed === false → keeping options and selection");
+        console.log("[DEBUG] ❌ data.passed is false, question stays for retry");
       }
 
 
