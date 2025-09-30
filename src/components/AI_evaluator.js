@@ -269,12 +269,13 @@ useEffect(() => {
               disabled={!selectedPdf} // disable until PDF selected
             >
               <option value="">Select Question</option>
-              {questions.map((q, idx) => (
+              {questionOptions.map((q, idx) => (
                 <option key={idx} value={q}>
                   {q}
                 </option>
               ))}
             </select>
+
           </div>
         </div>
 
