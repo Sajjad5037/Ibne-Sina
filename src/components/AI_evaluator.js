@@ -58,29 +58,33 @@ const AI_evaluator = ({ doctorData }) => {
 
 
   // Step 3: Fetch questions when PDF changes
-  useEffect(() => {
+   useEffect(() => {
     if (!selectedPdf) {
       setQuestions([]);
       return;
     }
-
-    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
+  
+    // Reconstruct full URL
+    const fullUrl = `https://storage.googleapis.com/ibne_sina_app/${selectedPdf}`;
+  
+    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(fullUrl)}`)
       .then((res) => res.json())
       .then((data) => setQuestions(data.questions || data))
       .catch((err) => console.error("Error fetching questions:", err));
   }, [selectedPdf]);
-
-  const handleFinish = async () => {
-    // --- Debug log to check doctorData ---
-    console.log("[DEBUG] Frontend variables for finish_session:");
-    console.log(
-      "selectedSubject =", selectedSubject || "[MISSING]",
-      "| selectedPdf =", selectedPdf || "[MISSING]",
-      "| student_id =", doctorData?.id ?? "[MISSING]",
-      "| student_name =", doctorData?.name ?? "[MISSING]",
-      "| preparedness =", "Well prepared"
-    );
   
+  
+    const handleFinish = async () => {
+      // --- Debug log to check doctorData ---
+      console.log("[DEBUG] Frontend variables for finish_session:");
+      console.log(
+        "selectedSubject =", selectedSubject || "[MISSING]",
+        "| selectedPdf =", selectedPdf || "[MISSING]",
+        "| student_id =", doctorData?.id ?? "[MISSING]",
+        "| student_name =", doctorData?.name ?? "[MISSING]",
+        "| preparedness =", "Well prepared"
+      );
+    
     // --- Prepare payload ---
     const payload = {
       subject: selectedSubject,
