@@ -16,16 +16,9 @@ import StudentUsageReport from "./components/StudentUsageReport";
 import UserUsageDashboard from "./components/UserUsageDashboard";
 import AiAudioLearning from "./components/AiAudioLearning";
 import ResponseAnalyzer from "./components/ResponseAnalyzer";
-
-
-
-
-
-
-
-
-
 import StudentDashboard from "./components/StudentDashboard";
+import SyllabusForm from "./components/SyllabusForm";
+
 
 // --- Login Page ---
 function LoginPage({ setIsLoggedIn, setDoctorData, setSessionToken }) {
@@ -59,6 +52,8 @@ function LoginPage({ setIsLoggedIn, setDoctorData, setSessionToken }) {
           navigate("/AdminPanel");
         } else if (data?.specialization === "sociology") {
           navigate("/StudentDashboard");
+        } else if (data?.specialization === "ibne_sina_admin") {
+          navigate("/SyllabusForm");
         } else {
           navigate("/"); // fallback
         }
@@ -143,6 +138,10 @@ function App() {
           <Route
             path="Syllabus"
             element={<Syllabus doctorData={doctorData} />}
+          />
+          <Route
+            path="SyllabusForm"
+            element={<SyllabusForm doctorData={doctorData} />}
           />
           <Route
             path="ai_evaluator"
