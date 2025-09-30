@@ -22,7 +22,7 @@ const AI_evaluator = ({ doctorData }) => {
 useEffect(() => {
   fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
     .then((res) => res.json())
-    .then((data) => setSubjects(data.subjects || data)) // handle array or object
+    .then((data) => setSubjects(data.subjects || data))
     .catch((err) => console.error("Error fetching subjects:", err));
 }, []);
 
@@ -39,10 +39,10 @@ useEffect(() => {
     .then((data) => {
       const urls = data.pdfs || data;
 
-      // Store both label (filename) and value (full URL)
+      // Store both label and filename only (value sent to backend)
       const pdfMap = urls.map((url) => ({
         label: url.split("/").pop(), // shown in dropdown
-        value: url,                  // full URL sent to backend
+        value: url.split("/").pop(), // filename sent to backend
       }));
 
       setPdfs(pdfMap);
@@ -57,13 +57,13 @@ useEffect(() => {
     return;
   }
 
-  console.log("Fetching questions for PDF URL:", selectedPdf); // debug
+  console.log("Fetching questions for PDF filename:", selectedPdf); // debug
 
   fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
     .then((res) => res.json())
     .then((data) => {
       console.log("Questions received:", data); // debug
-      setQuestions(data || []); 
+      setQuestions(data || []);
     })
     .catch((err) => console.error("Error fetching questions:", err));
 }, [selectedPdf]);
@@ -210,7 +210,7 @@ useEffect(() => {
       {/* Row with Subject, PDF and Question */}
       {/* Row with Subject, PDF, and Question */}
       <div className="flex items-end gap-6">
-      
+
         {/* Subject Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
