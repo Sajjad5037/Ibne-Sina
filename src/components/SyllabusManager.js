@@ -2,6 +2,53 @@ import React, { useState } from "react";
 
 export default function SyllabusManager() {
   const [activeTab, setActiveTab] = useState("Add");
+  const [className, setClassName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [images, setImages] = useState([])
+
+  const API_BASE = "https://usefulapis-production.up.railway.app";
+
+
+  // Handle file input
+  const handleFileChange = (e) => {
+    setImages(e.target.files);
+  };
+
+  const handleAddWithImages = async () => {
+    if (!className || !subject || !chapter || images.length === 0) {
+      return alert("Please fill all fields and select at least one image");
+    }
+
+    const formData = new FormData();
+    formData.append("class_name", className);
+    formData.append("subject", subject);
+    formData.append("chapter", chapter);
+
+    // Append each image
+    for (let i = 0; i < images.length; i++) {
+      formData.append("images", images[i]); // backend should accept multiple "images"
+    }
+
+    try {
+      const res = await axios.post(`${API_BASE}/syllabus/add-with-images`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Syllabus added successfully!");
+      console.log("Backend response:", res.data);
+
+      // Reset form
+      setClassName("");
+      setSubject("");
+      setChapter("");
+      setImages([]);
+      document.getElementById("imagesInput").value = ""; // reset file input
+    } catch (err) {
+      console.error("Error uploading syllabus:", err);
+      alert("Failed to add syllabus");
+    }
+  };
 
   const tabs = ["Add", "Edit", "Delete", "View All"];
 
@@ -63,7 +110,7 @@ export default function SyllabusManager() {
       
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            // onClick={handleAddWithImages} --> implement backend call here
+            onClick={handleAddWithImages} 
           >
             Add
           </button>
