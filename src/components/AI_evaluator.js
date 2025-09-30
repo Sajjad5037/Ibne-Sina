@@ -185,24 +185,18 @@ useEffect(() => {
         console.log("[DEBUG] Selected question to remove:", JSON.stringify(selectedQuestion));
       
         setQuestionOptions((prev) => {
-          console.log("[DEBUG] Previous options:", prev);
+          console.log("[DEBUG] Previous options:", prev.map(q => JSON.stringify(q)));
         
           const normalize = (str) => str.trim().replace(/\s+/g, " ");
-        
-          // if prev is empty, fallback to the last known full list
-          const source = prev.length > 0 ? prev : allQuestions;
-        
-          console.log("[DEBUG] Source list for filtering:", source);
-        
-          const newOptions = source.filter(
+          const newOptions = prev.filter(
             (q) => normalize(q) !== normalize(selectedQuestion)
           );
         
-          console.log("[DEBUG] New options after filter:", newOptions);
+          console.log("[DEBUG] New options after filter:", newOptions.map(q => JSON.stringify(q)));
         
           return newOptions;
         });
-      
+
         // no need to clear selection immediately — let the UI naturally reset
       } else {
         console.log("[DEBUG] ❌ data.passed is false, question stays for retry");
