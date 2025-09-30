@@ -377,9 +377,9 @@ useEffect(() => {
       </button>
       <button
         onClick={handleFinish}
-        disabled={questions.length > 0} // disable while questions remain
+        disabled={questionOptions.length > 0} // disable while questions remain
         className={`px-4 py-2 rounded-lg font-medium shadow ${
-          questions.length > 0
+          questionOptions.length > 0
             ? "bg-gray-300 text-gray-600 cursor-not-allowed"
             : "bg-green-600 hover:bg-green-700 text-white"
         }`}
