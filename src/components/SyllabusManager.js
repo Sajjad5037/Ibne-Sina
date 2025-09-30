@@ -30,6 +30,7 @@ export default function SyllabusManager() {
       {activeTab === "Add" && (
         <div>
           <h3 className="font-semibold mb-2">Add Syllabus Entry</h3>
+      
           <input
             type="text"
             name="className"
@@ -48,7 +49,22 @@ export default function SyllabusManager() {
             placeholder="Chapter"
             className="border px-3 py-2 rounded w-full mb-2"
           />
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      
+          {/* Image Upload */}
+          <label className="block mb-2 font-medium">Upload Images (optional)</label>
+          <input
+            type="file"
+            name="images"
+            multiple
+            accept="image/*"
+            className="border px-3 py-2 rounded w-full mb-4"
+            // onChange={handleImageChange} --> handle this in your state or backend integration
+          />
+      
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            // onClick={handleAddWithImages} --> implement backend call here
+          >
             Add
           </button>
         </div>
