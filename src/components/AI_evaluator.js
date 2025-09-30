@@ -30,7 +30,7 @@ useEffect(() => {
 useEffect(() => {
   if (!selectedSubject) {
     setPdfs([]);
-    setSelectedPdf(""); // clear selected PDF
+    setSelectedPdf("");
     return;
   }
 
@@ -39,10 +39,10 @@ useEffect(() => {
     .then((data) => {
       const urls = data.pdfs || data;
 
-      // Store both filename (label) and full URL (value)
+      // Store both label (filename) and value (full URL)
       const pdfMap = urls.map((url) => ({
-        label: url.split("/").pop(), // what user sees
-        value: url,                  // full URL to send to backend
+        label: url.split("/").pop(), // shown in dropdown
+        value: url,                  // full URL sent to backend
       }));
 
       setPdfs(pdfMap);
@@ -57,9 +57,14 @@ useEffect(() => {
     return;
   }
 
+  console.log("Fetching questions for PDF URL:", selectedPdf); // debug
+
   fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
     .then((res) => res.json())
-    .then((data) => setQuestions(data.questions || data))
+    .then((data) => {
+      console.log("Questions received:", data); // debug
+      setQuestions(data || []); 
+    })
     .catch((err) => console.error("Error fetching questions:", err));
 }, [selectedPdf]);
 
@@ -204,51 +209,51 @@ useEffect(() => {
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
       {/* Row with Subject, PDF and Question */}
       {/* Row with Subject, PDF, and Question */}
-<div className="flex items-end gap-6">
-
-  {/* Subject */}
-  <div className="flex flex-col">
-    <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
-    <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
-      <option value="">-- Select Subject --</option>
-      {subjects.map((subj, idx) => (
-        <option key={idx} value={subj}>{subj}</option>
-      ))}
-    </select>
-  </div>
-
-  {/* PDF Name */}
-  <div className="flex flex-col">
-    <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
-    <select value={selectedPdf} onChange={(e) => setSelectedPdf(e.target.value)}>
-      <option value="">Select PDF</option>
-      {pdfs.map((pdf) => (
-        <option key={pdf.value} value={pdf.value}>
-          {pdf.label}
-        </option>
-      ))}
-    </select>
-  </div>
-
-  {/* Question Text */}
-  <div className="flex flex-col">
-    <label className="text-sm font-medium text-gray-700 mb-1">Question Text</label>
-    <select
-      value={selectedQuestion}
-      onChange={(e) => setSelectedQuestion(e.target.value)}
-      className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      disabled={!selectedPdf} // disable until PDF is selected
-    >
-      <option value="">Select Question</option>
-      {questions.map((q, idx) => (
-        <option key={idx} value={q}>
-          {q}
-        </option>
-      ))}
-    </select>
-  </div>
-
-</div>
+      <div className="flex items-end gap-6">
+      
+        {/* Subject Dropdown */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
+          <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
+            <option value="">-- Select Subject --</option>
+            {subjects.map((subj, idx) => (
+              <option key={idx} value={subj}>{subj}</option>
+            ))}
+          </select>
+        </div>
+      
+        {/* PDF Dropdown */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
+          <select value={selectedPdf} onChange={(e) => setSelectedPdf(e.target.value)}>
+            <option value="">Select PDF</option>
+            {pdfs.map((pdf) => (
+              <option key={pdf.value} value={pdf.value}>
+                {pdf.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      
+        {/* Question Dropdown */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Question Text</label>
+          <select
+            value={selectedQuestion}
+            onChange={(e) => setSelectedQuestion(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!selectedPdf} // disable until PDF selected
+          >
+            <option value="">Select Question</option>
+            {questions.map((q, idx) => (
+              <option key={idx} value={q}>
+                {q}
+              </option>
+            ))}
+          </select>
+        </div>
+      
+      </div>
 
       {/* Chat Window */}
       <div className="border rounded-lg bg-white p-4 h-64 overflow-y-auto shadow-inner">
