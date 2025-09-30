@@ -18,6 +18,8 @@ import AiAudioLearning from "./components/AiAudioLearning";
 import ResponseAnalyzer from "./components/ResponseAnalyzer";
 import StudentDashboard from "./components/StudentDashboard";
 import SyllabusManager from "./components/SyllabusManager";
+import syllabus_new from "./components/syllabus_new";
+
 
 
  
@@ -143,7 +145,7 @@ function App() {
           />
           <Route
             path="Syllabus"
-            element={<Syllabus doctorData={doctorData} />}
+            element={<syllabus_new doctorData={doctorData} />}
           />
           
           <Route
