@@ -357,16 +357,16 @@ useEffect(() => {
       </button>
       <button
         onClick={handleFinish}
-        disabled={false} // force enabled for testing
+        disabled={questions.length > 0} // disable while questions remain
         className={`px-4 py-2 rounded-lg font-medium shadow ${
-          false // matches disabled prop
+          questions.length > 0
             ? "bg-gray-300 text-gray-600 cursor-not-allowed"
             : "bg-green-600 hover:bg-green-700 text-white"
         }`}
       >
         Finish
       </button>
-
+          
     </div>
   );
 };
