@@ -5,11 +5,11 @@ export default function SyllabusManager() {
   const [activeTab, setActiveTab] = useState("add");
   const [syllabus, setSyllabus] = useState([]);
   const [form, setForm] = useState({ className: "", subject: "", chapter: "" });
-  const [editId, setEditId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
   const API_URL = "http://localhost:8000/syllabus"; // Update with your backend URL
 
-  // Fetch all syllabus entries on load
+  // Fetch all syllabus entries on component load
   useEffect(() => {
     const fetchSyllabus = async () => {
       try {
@@ -45,28 +45,34 @@ export default function SyllabusManager() {
     }
   };
 
-  // Start editing an entry
-  const handleEditInit = (entry) => {
-    setEditId(entry.id);
-    setForm({ className: entry.class_name, subject: entry.subject, chapter: entry.chapter });
-    setActiveTab("edit");
+  // When user selects an entry from dropdown in Edit tab
+  const handleSelectEntry = (id) => {
+    setSelectedId(id);
+    const entry = syllabus.find((e) => e.id === parseInt(id));
+    if (entry) {
+      setForm({
+        className: entry.class_name,
+        subject: entry.subject,
+        chapter: entry.chapter,
+      });
+    }
   };
 
   // Save edited entry
   const handleSaveEdit = async () => {
-    if (!form.className || !form.subject || !form.chapter) {
-      return alert("Fill all fields");
+    if (!selectedId || !form.className || !form.subject || !form.chapter) {
+      return alert("Select an entry and fill all fields");
     }
     try {
-      const res = await axios.put(`${API_URL}/${editId}`, {
+      const res = await axios.put(`${API_URL}/${selectedId}`, {
         class_name: form.className,
         subject: form.subject,
         chapter: form.chapter,
       });
-      const updated = syllabus.map((entry) => (entry.id === editId ? res.data : entry));
+      const updated = syllabus.map((entry) => (entry.id === selectedId ? res.data : entry));
       setSyllabus(updated);
       setForm({ className: "", subject: "", chapter: "" });
-      setEditId(null);
+      setSelectedId(null);
       setActiveTab("add");
     } catch (err) {
       console.error("Error editing syllabus:", err);
@@ -105,7 +111,7 @@ export default function SyllabusManager() {
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Add Tab */}
       {activeTab === "add" && (
         <div>
           <h3 className="font-semibold mb-2">Add Syllabus Entry</h3>
@@ -142,11 +148,27 @@ export default function SyllabusManager() {
         </div>
       )}
 
+      {/* Edit Tab */}
       {activeTab === "edit" && (
         <div>
-          {editId !== null ? (
-            <div>
-              <h3 className="font-semibold mb-2">Edit Syllabus Entry</h3>
+          <h3 className="font-semibold mb-2">Edit Syllabus Entry</h3>
+          <select
+            className="border px-3 py-2 rounded w-full mb-2"
+            value={selectedId || ""}
+            onChange={(e) => handleSelectEntry(e.target.value)}
+          >
+            <option value="" disabled>
+              -- Select entry to edit --
+            </option>
+            {syllabus.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.class_name} - {entry.subject} - {entry.chapter}
+              </option>
+            ))}
+          </select>
+
+          {selectedId && (
+            <>
               <input
                 type="text"
                 name="className"
@@ -177,13 +199,12 @@ export default function SyllabusManager() {
               >
                 Save Changes
               </button>
-            </div>
-          ) : (
-            <p>Select an entry from the list below to edit it.</p>
+            </>
           )}
         </div>
       )}
 
+      {/* Delete Tab */}
       {activeTab === "delete" && (
         <div>
           <h3 className="font-semibold mb-2">Delete Syllabus Entry</h3>
@@ -198,7 +219,7 @@ export default function SyllabusManager() {
                   </span>
                   <div>
                     <button
-                      onClick={() => handleEditInit(entry)}
+                      onClick={() => setActiveTab("edit") || handleSelectEntry(entry.id)}
                       className="mr-2 px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
                     >
                       Edit
