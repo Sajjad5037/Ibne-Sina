@@ -106,13 +106,13 @@ export default function SyllabusManager() {
       
           {/* Image Upload */}
           <label className="block mb-2 font-medium">Upload Images (mandatory)</label>
-          <input
+         <input
             type="file"
-            name="images"
             multiple
             accept="image/*"
+            id="imagesInput"
+            onChange={handleFileChange}
             className="border px-3 py-2 rounded w-full mb-4"
-            // onChange={handleImageChange} --> handle this in your state or backend integration
           />
       
           <button
