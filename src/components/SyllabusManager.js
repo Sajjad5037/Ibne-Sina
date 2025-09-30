@@ -1,44 +1,89 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function SyllabusManager() {
   const [activeTab, setActiveTab] = useState("add");
   const [syllabus, setSyllabus] = useState([]);
   const [form, setForm] = useState({ className: "", subject: "", chapter: "" });
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  // Handle input changes
+  const API_URL = "http://localhost:8000/syllabus"; // Update with your backend URL
+
+  // Fetch all syllabus entries on load
+  useEffect(() => {
+    const fetchSyllabus = async () => {
+      try {
+        const res = await axios.get(API_URL);
+        setSyllabus(res.data);
+      } catch (err) {
+        console.error("Error fetching syllabus:", err);
+      }
+    };
+    fetchSyllabus();
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Add syllabus entry
-  const handleAdd = () => {
-    if (!form.className || !form.subject || !form.chapter) return alert("Fill all fields");
-    setSyllabus([...syllabus, { ...form }]);
-    setForm({ className: "", subject: "", chapter: "" });
+  // Add new syllabus entry
+  const handleAdd = async () => {
+    if (!form.className || !form.subject || !form.chapter) {
+      return alert("Fill all fields");
+    }
+    try {
+      const res = await axios.post(API_URL + "/", {
+        class_name: form.className,
+        subject: form.subject,
+        chapter: form.chapter,
+      });
+      setSyllabus([...syllabus, res.data]);
+      setForm({ className: "", subject: "", chapter: "" });
+    } catch (err) {
+      console.error("Error adding syllabus:", err);
+      alert("Failed to add syllabus.");
+    }
   };
 
-  // Start editing
-  const handleEditInit = (index) => {
-    setEditIndex(index);
-    setForm({ ...syllabus[index] });
+  // Start editing an entry
+  const handleEditInit = (entry) => {
+    setEditId(entry.id);
+    setForm({ className: entry.class_name, subject: entry.subject, chapter: entry.chapter });
     setActiveTab("edit");
   };
 
   // Save edited entry
-  const handleSaveEdit = () => {
-    const updated = [...syllabus];
-    updated[editIndex] = { ...form };
-    setSyllabus(updated);
-    setForm({ className: "", subject: "", chapter: "" });
-    setEditIndex(null);
-    setActiveTab("add");
+  const handleSaveEdit = async () => {
+    if (!form.className || !form.subject || !form.chapter) {
+      return alert("Fill all fields");
+    }
+    try {
+      const res = await axios.put(`${API_URL}/${editId}`, {
+        class_name: form.className,
+        subject: form.subject,
+        chapter: form.chapter,
+      });
+      const updated = syllabus.map((entry) => (entry.id === editId ? res.data : entry));
+      setSyllabus(updated);
+      setForm({ className: "", subject: "", chapter: "" });
+      setEditId(null);
+      setActiveTab("add");
+    } catch (err) {
+      console.error("Error editing syllabus:", err);
+      alert("Failed to save changes.");
+    }
   };
 
-  // Delete entry
-  const handleDelete = (index) => {
-    const updated = syllabus.filter((_, i) => i !== index);
-    setSyllabus(updated);
+  // Delete an entry
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this entry?")) return;
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      setSyllabus(syllabus.filter((entry) => entry.id !== id));
+    } catch (err) {
+      console.error("Error deleting syllabus:", err);
+      alert("Failed to delete entry.");
+    }
   };
 
   return (
@@ -99,7 +144,7 @@ export default function SyllabusManager() {
 
       {activeTab === "edit" && (
         <div>
-          {editIndex !== null ? (
+          {editId !== null ? (
             <div>
               <h3 className="font-semibold mb-2">Edit Syllabus Entry</h3>
               <input
@@ -146,20 +191,20 @@ export default function SyllabusManager() {
             <p>No entries to delete.</p>
           ) : (
             <ul className="list-disc list-inside">
-              {syllabus.map((entry, index) => (
-                <li key={index} className="flex justify-between items-center mb-1">
+              {syllabus.map((entry) => (
+                <li key={entry.id} className="flex justify-between items-center mb-1">
                   <span>
-                    {entry.className} - {entry.subject} - {entry.chapter}
+                    {entry.class_name} - {entry.subject} - {entry.chapter}
                   </span>
                   <div>
                     <button
-                      onClick={() => handleEditInit(index)}
+                      onClick={() => handleEditInit(entry)}
                       className="mr-2 px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(index)}
+                      onClick={() => handleDelete(entry.id)}
                       className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                     >
                       Delete
