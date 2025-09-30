@@ -55,7 +55,7 @@ function LoginPage({ setIsLoggedIn, setDoctorData, setSessionToken }) {
         } else if (data?.specialization === "sociology") {
           navigate("/StudentDashboard");
         } else if (data?.specialization === "ibne_sina_admin") {
-          navigate("/SyllabusForm");
+          navigate("/SyllabusManager");
         } else {
           navigate("/"); // fallback
         }
