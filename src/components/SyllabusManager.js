@@ -86,7 +86,7 @@ export default function SyllabusManager() {
             onChange={(e) => setClassName(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
-          
+      
           <input
             type="text"
             placeholder="Subject"
@@ -94,7 +94,7 @@ export default function SyllabusManager() {
             onChange={(e) => setSubject(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
-          
+      
           <input
             type="text"
             placeholder="Chapter"
@@ -102,58 +102,26 @@ export default function SyllabusManager() {
             onChange={(e) => setChapter(e.target.value)}
             className="border px-3 py-2 rounded w-full mb-2"
           />
-
       
           {/* Image Upload */}
           <label className="block mb-2 font-medium">Upload Images (mandatory)</label>
-         <input
+          <input
             type="file"
             multiple
             accept="image/*"
             id="imagesInput"
-            onChange={handleFileChange}
+            onChange={(e) => setImages(Array.from(e.target.files))} // convert FileList to array
             className="border px-3 py-2 rounded w-full mb-4"
           />
       
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={handleAddWithImages} 
+            onClick={() => {
+              console.log({ className, subject, chapter, images }); // debug
+              handleAddWithImages();
+            }}
           >
             Add
-          </button>
-        </div>
-      )}
-
-      {/* Edit Tab */}
-      {activeTab === "Edit" && (
-        <div>
-          <h3 className="font-semibold mb-2">Edit Syllabus Entry</h3>
-          <select className="border px-3 py-2 rounded w-full mb-2">
-            <option value="" disabled>
-              -- Select entry to edit --
-            </option>
-            {/* Options to be filled from backend */}
-          </select>
-          <input
-            type="text"
-            name="className"
-            placeholder="Class"
-            className="border px-3 py-2 rounded w-full mb-2"
-          />
-          <input
-            type="text"
-            name="subject"
-            placeholder="Subject"
-            className="border px-3 py-2 rounded w-full mb-2"
-          />
-          <input
-            type="text"
-            name="chapter"
-            placeholder="Chapter"
-            className="border px-3 py-2 rounded w-full mb-2"
-          />
-          <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            Save Changes
           </button>
         </div>
       )}
