@@ -17,7 +17,6 @@ import UserUsageDashboard from "./components/UserUsageDashboard";
 import AiAudioLearning from "./components/AiAudioLearning";
 import ResponseAnalyzer from "./components/ResponseAnalyzer";
 import StudentDashboard from "./components/StudentDashboard";
-import SyllabusForm from "./components/SyllabusForm";
 import SyllabusManager from "./components/SyllabusManager";
 
 
