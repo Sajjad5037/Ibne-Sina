@@ -7,6 +7,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [chapters, setChapters] = useState([]);
   const [imageMap, setImageMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [classes, setClasses] = useState([]);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -45,11 +46,11 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
   // 🔹 Load chapters whenever class or subject changes
   useEffect(() => {
-    if (!className || !subject) return setChapters([]);
+    if (!className || !subjects) return setChapters([]);
     const fetchChapters = async () => {
       try {
         const res = await axios.get(
-          `${API_BASE}/chapters?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}`
+          `${API_BASE}/chapters?class=${encodeURIComponent(className)}&subjects=${encodeURIComponent(subjects)}`
         );
         setChapters(res.data); // assume backend returns ["Algebra", "Geometry", ...]
       } catch (err) {
@@ -58,16 +59,16 @@ const ChatbotTrainerUI = ({ doctorData }) => {
       }
     };
     fetchChapters();
-  }, [className, subject]);
+  }, [className, subjects]);
   
   // 🔹 Start training session
   const startConversation = async () => {
-    if (!className || !subject || !chapter) {
-      alert("Please select class, subject, and chapter first.");
+    if (!className || !subjects || !chapters) {
+      alert("Please select class, subjects, and chapters first.");
       return;
     }
 
-    const selectedPages = imageMap[className]?.[subject]?.[chapter] || [];
+    const selectedPages = imageMap[className]?.[subjects]?.[chapters] || [];
 
     if (!selectedPages.length) {
       alert("No pages found for this selection.");
@@ -76,7 +77,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
     setMessages([
       {
-        text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+        text: `Training session started for ${subjects} > ${chapters} > ${className}.`,
         sender: "bot",
       },
       {
@@ -86,15 +87,15 @@ const ChatbotTrainerUI = ({ doctorData }) => {
     ]);
 
     try {
-      console.log("📄 Chapter (used as pdf_name):", chapter); // ✅ Debug print
+      console.log("📄 chapters (used as pdf_name):", chapters); // ✅ Debug print
       const response = await fetch(
         "https://usefulapis-production.up.railway.app/start-session-ibne-sina",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            subject,
-            chapter,
+            subjects,
+            chapters,
             className,
             pages: selectedPages, // ✅ full GCS URLs
             name: doctorData.name,
@@ -199,27 +200,27 @@ const ChatbotTrainerUI = ({ doctorData }) => {
               className,
               (val) => {
                 setClassName(val);
-                setSubject("");
-                setChapter("");
+                setsubjects("");
+                setchapters("");
               },
               Object.keys(imageMap)
             )}
             {renderSelect(
-              "Subject",
-              subject,
+              "subjects",
+              subjects,
               (val) => {
-                setSubject(val);
-                setChapter("");
+                setsubjects(val);
+                setchapters("");
               },
               className ? Object.keys(imageMap[className]) : [],
               !className
             )}
             {renderSelect(
-              "Chapter",
-              chapter,
-              setChapter,
-              className && subject ? Object.keys(imageMap[className][subject]) : [],
-              !subject
+              "chapters",
+              chapters,
+              setchapters,
+              className && subjects ? Object.keys(imageMap[className][subjects]) : [],
+              !subjects
             )}
             <div className="flex items-end">
               <button
