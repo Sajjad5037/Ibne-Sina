@@ -200,8 +200,8 @@ const ChatbotTrainerUI = ({ doctorData }) => {
               className,
               (val) => {
                 setClassName(val);
-                setsubjects("");
-                setchapters("");
+                setSubjects("");
+                setChapters("");
               },
               Object.keys(imageMap)
             )}
@@ -209,8 +209,8 @@ const ChatbotTrainerUI = ({ doctorData }) => {
               "subjects",
               subjects,
               (val) => {
-                setsubjects(val);
-                setchapters("");
+                setSubjects(val);
+                setChapters("");
               },
               className ? Object.keys(imageMap[className]) : [],
               !className
