@@ -72,15 +72,30 @@ const ChatbotTrainerUI = ({ doctorData }) => {
       alert("Please select class, subject, and chapter first.");
       return;
     }
-
+  
     setMessages([
       {
         text: `Training session started for ${subject} > ${chapter} > ${className}.`,
         sender: "bot",
       },
     ]);
-
+  
     try {
+      // 🔹 Fetch the chapter images first
+      const resImages = await axios.get(
+        `${API_BASE}/chapter-images?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}`
+      );
+      const selectedPages = resImages.data; // array of image URLs
+  
+      if (!selectedPages.length) {
+        setMessages((prev) => [
+          ...prev,
+          { text: "No images found for this chapter.", sender: "bot" },
+        ]);
+        return;
+      }
+  
+      // 🔹 Start training session with images
       const response = await fetch(`${API_BASE}/start-session-ibne-sina`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,12 +103,13 @@ const ChatbotTrainerUI = ({ doctorData }) => {
           className,
           subject,
           chapter,
+          pages: selectedPages, // send images here
           name: doctorData.name,
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (data.sessionId) {
         setSessionId(data.sessionId);
         const backendMessage = data.message || "Session initialized successfully.";
@@ -109,6 +125,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
       ]);
     }
   };
+
 
   // 🔹 Send message to the tutor
   const handleSendMessage = async () => {
