@@ -12,7 +12,8 @@ export default function Syllabus_new() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = "http://localhost:8000"; // replace with your backend URL
+  const API_BASE = "https://usefulapis-production.up.railway.app";
+ // replace with your backend URL
 
   // 🔹 Load available classes on mount
   useEffect(() => {
