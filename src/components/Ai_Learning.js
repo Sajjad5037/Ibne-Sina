@@ -218,7 +218,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
             {renderSelect(
               "chapters",
               chapters,
-              setchapters,
+              setChapters,
               className && subjects ? Object.keys(imageMap[className][subjects]) : [],
               !subjects
             )}
