@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 const ChatbotTrainerUI = ({ doctorData }) => {
   const [className, setClassName] = useState("");
-  const [subject, setSubject] = useState("");
-  const [chapter, setChapter] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [chapters, setChapters] = useState([]);
   const [imageMap, setImageMap] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -11,7 +12,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState(null);
   const [isSending, setIsSending] = useState(false);
-
+  const API_BASE = "https://usefulapis-production.up.railway.app";
   // 🔹 Fetch the latest image map
   useEffect(() => {
     const fetchClasses = async () => {
