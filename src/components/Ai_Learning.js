@@ -14,22 +14,51 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
   // 🔹 Fetch the latest image map
   useEffect(() => {
-    const fetchImageMap = async () => {
+    const fetchClasses = async () => {
       try {
-        const res = await fetch(
-          "https://storage.googleapis.com/ibne_sina_app/imageMap1.json"
-        );
-        const data = await res.json();
-        setImageMap(data);
+        const res = await axios.get(`${API_BASE}/classes`);
+        setClasses(res.data); // assume backend returns ["Class 7", "Class 8", ...]
       } catch (err) {
-        console.error("Failed to load imageMap1.json", err);
+        console.error("Failed to fetch classes:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchImageMap();
+    fetchClasses();
   }, []);
 
+  // 🔹 Load subjects whenever class changes
+  useEffect(() => {
+    if (!className) return setSubjects([]);
+    const fetchSubjects = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/subjects?class=${encodeURIComponent(className)}`);
+        setSubjects(res.data); // assume backend returns ["Math", "Science", ...]
+      } catch (err) {
+        console.error("Failed to fetch subjects:", err);
+        setSubjects([]);
+      }
+    };
+    fetchSubjects();
+  }, [className]);
+
+  // 🔹 Load chapters whenever class or subject changes
+  useEffect(() => {
+    if (!className || !subject) return setChapters([]);
+    const fetchChapters = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/chapters?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}`
+        );
+        setChapters(res.data); // assume backend returns ["Algebra", "Geometry", ...]
+      } catch (err) {
+        console.error("Failed to fetch chapters:", err);
+        setChapters([]);
+      }
+    };
+    fetchChapters();
+  }, [className, subject]);
+  
   // 🔹 Start training session
   const startConversation = async () => {
     if (!className || !subject || !chapter) {
