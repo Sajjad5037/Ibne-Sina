@@ -20,14 +20,6 @@ const AI_evaluator = ({ doctorData }) => {
 
   // --- Step 1: Fetch subjects on mount ---
 useEffect(() => {
-  fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
-    .then((res) => res.json())
-    .then((data) => setSubjects(data.subjects || data))
-    .catch((err) => console.error("Error fetching subjects:", err));
-}, []);
-
-// --- Step 2: Fetch PDFs when subject changes ---
-useEffect(() => {
   if (!selectedSubject) {
     setPdfs([]);
     setSelectedPdf("");
@@ -39,16 +31,21 @@ useEffect(() => {
     .then((data) => {
       const urls = data.pdfs || data;
 
-      // Store both label and filename only (value sent to backend)
-      const pdfMap = urls.map((url) => ({
-        label: url.split("/").pop(), // shown in dropdown
-        value: url.split("/").pop(), // filename sent to backend
-      }));
+      // Map to show short name but keep full name for backend
+      const pdfMap = urls.map((url) => {
+        const fullName = url.split("/").pop();          // e.g., "bfdd7c5b-a9c0-44d2-bfad-5e4da6b5fdb5_page_5.png"
+        const shortName = fullName.split("_").slice(-2).join("_"); // "page_5.png"
+        return {
+          label: shortName,  // shown in dropdown
+          value: fullName,   // sent to backend
+        };
+      });
 
       setPdfs(pdfMap);
     })
     .catch((err) => console.error("Error fetching PDFs:", err));
 }, [selectedSubject]);
+
 
 // --- Step 3: Fetch questions when PDF changes ---
 useEffect(() => {
@@ -141,7 +138,11 @@ useEffect(() => {
     // --- Step 2: Prepare FormData ---
     const formData = new FormData();
     formData.append("subject", selectedSubject);
-    formData.append("pdf", selectedPdf);
+  
+    // Use selectedPdf.value to ensure full PDF name is sent
+    const fullPdfName = selectedPdf.value || selectedPdf; 
+    formData.append("pdf", fullPdfName);
+  
     formData.append("question", selectedQuestion);
   
     let studentAnswer = "";
@@ -185,28 +186,16 @@ useEffect(() => {
       ]);
   
       // --- Step 6: Remove question if student passed ---
-      // When backend says "passed"
       if (data.passed) {
         console.log("✅ Question passed:", selectedQuestion);
-      
+  
         setQuestionOptions((prevOptions) => {
-          // Normalize helper (avoid spacing mismatches)
           const normalize = (str) => str.trim().replace(/\s+/g, " ");
-      
-          const newOptions = prevOptions.filter(
-            (q) => normalize(q) !== normalize(selectedQuestion)
-          );
-      
-          console.log("[DEBUG] Updated options:", newOptions);
-          return newOptions;
+          return prevOptions.filter((q) => normalize(q) !== normalize(selectedQuestion));
         });
-        // no need to clear selection immediately — let the UI naturally reset
       } else {
         console.log("[DEBUG] ❌ data.passed is false, question stays for retry");
       }
-
-
-  
     } catch (err) {
       console.error("Error evaluating:", err);
       alert("Failed to evaluate the answer. Please try again.");
@@ -216,13 +205,13 @@ useEffect(() => {
     setUserInput("");
     setUploadedImage(null);
   };
-
-  const handleImageUpload = (e) => {
-    if (e.target.files.length > 0) {
-      setUploadedImage(e.target.files[0]);
-      setUserInput(""); // clear text if switching to image
-    }
-  };
+  
+    const handleImageUpload = (e) => {
+      if (e.target.files.length > 0) {
+        setUploadedImage(e.target.files[0]);
+        setUserInput(""); // clear text if switching to image
+      }
+    };
 
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
