@@ -90,61 +90,7 @@ const AI_evaluator = ({ doctorData }) => {
 
   
   
-    const handleFinish = async () => {
-      // --- Debug log to check doctorData ---
-      console.log("[DEBUG] Frontend variables for finish_session:");
-      console.log(
-        "selectedSubject =", selectedSubject || "[MISSING]",
-        "| selectedPdf =", selectedPdf || "[MISSING]",
-        "| student_id =", doctorData?.id ?? "[MISSING]",
-        "| student_name =", doctorData?.name ?? "[MISSING]",
-        "| preparedness =", "Well prepared"
-      );
     
-    // --- Prepare payload ---
-    const payload = {
-      subject: selectedSubject,
-      student_id: String(doctorData?.id),       // convert to string
-      student_name: doctorData?.name,
-      pdf: selectedPdf,
-      preparedness: "Well prepared"
-    };
-  
-    try {
-      const response = await fetch(
-        "https://usefulapis-production.up.railway.app/api/finish_session_ibne_sina",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error finishing session:", errorData);
-        alert(errorData.detail || "Failed to finish session.");
-        return;
-      }
-  
-      const data = await response.json();
-  
-      // --- Show confirmation ---
-      alert(data.message || "Session successfully saved!");
-      // Optionally, reset states
-      setChatLog([]);
-      setSelectedSubject("");
-      setSelectedPdf("");
-      setSelectedQuestion("");
-      setQuestionOptions([]);
-    } catch (err) {
-      console.error("Error finishing session:", err);
-      alert("Failed to finish session. Please try again.");
-    }
-  };
-
   
   const handleEvaluate = async () => {
     // --- Step 1: Validate selections ---
@@ -382,17 +328,7 @@ const AI_evaluator = ({ doctorData }) => {
       >
         Submit Answer
       </button>
-      <button
-        onClick={handleFinish}
-        disabled={questionOptions.length > 0} // disable while questions remain
-        className={`px-4 py-2 rounded-lg font-medium shadow ${
-          questionOptions.length > 0
-            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700 text-white"
-        }`}
-      >
-        Finish
-      </button>
+      
           
     </div>
   );
