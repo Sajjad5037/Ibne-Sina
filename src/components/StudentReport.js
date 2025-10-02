@@ -79,7 +79,7 @@ const StudentReport = ({ doctorData }) => {
 
     // --- 2️⃣ Fetch all chapters from syllabus ---
     const syllabusRes = await fetch(
-      "https://usefulapis-production.up.railway.app/syllabus_ibne_sina",
+      "https://usefulapis-production.up.railway.app/syllabus_chapters",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
