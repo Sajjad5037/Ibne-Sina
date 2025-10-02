@@ -227,8 +227,20 @@ const StudentReport = ({ doctorData }) => {
     {notPreparedReport.length > 0 && (
       <div>
         <h3 style={{ marginBottom: "10px", color: "#333" }}>❌ Chapters Not Yet Prepared</h3>
-        <div style={{ overflowX: "auto", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+        <div
+          style={{
+            overflowX: "auto",
+            borderRadius: "10px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+          }}
+        >
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              minWidth: "600px",
+            }}
+          >
             <thead style={{ backgroundColor: "#dc3545", color: "#fff" }}>
               <tr>
                 <th style={{ padding: "12px" }}>Chapter Name</th>
@@ -239,10 +251,16 @@ const StudentReport = ({ doctorData }) => {
             <tbody>
               {notPreparedReport.map((item, idx) => (
                 <tr key={idx} style={{ backgroundColor: "#fff8f8" }}>
-                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.chapter}</td>
-                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.subject}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
-                    {Array.isArray(item.image_urls) ? item.image_urls.join(", ") : "No images"}
+                    {item.chapter || "No chapter"}
+                  </td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
+                    {item.subject || "No subject"}
+                  </td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
+                    {item.image_urls && item.image_urls.length > 0
+                      ? item.image_urls.join(", ")
+                      : "No images"}
                   </td>
                 </tr>
               ))}
@@ -251,6 +269,7 @@ const StudentReport = ({ doctorData }) => {
         </div>
       </div>
     )}
+
 
     {!loading && wellPreparedReport.length === 0 && notPreparedReport.length === 0 && (
       <p style={{ textAlign: "center", color: "#555", marginTop: "20px" }}>
