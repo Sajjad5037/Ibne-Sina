@@ -17,9 +17,7 @@ const AiAudioLearning = ({ doctorData }) => {
   const audioRef = useRef(null);
   const chatWindowRef = useRef(null);
 
-  // Reset question when marks change
-  useEffect(() => setQuestionText(""), [marks]);
-
+ 
   // Auto-scroll chat
   useEffect(() => {
     if (chatWindowRef.current) {
@@ -27,30 +25,58 @@ const AiAudioLearning = ({ doctorData }) => {
     }
   }, [chatLog]);
 
-  const questionsByMarks = {
-    4: [
-      "Explain two features of a laboratory experiment and how they are used to test hypotheses in sociology.",
-      "Describe two types of qualitative interview.",
-      "Describe two ways children learn about gender identity.",
-      "Describe two ways increased life expectancy may impact upon the family.",
-      "Describe two ways social policies may impact upon the family.",
-      "Describe two ways childhood is a distinct period from adulthood.",
-      "Describe two ways schools can be seen as feminised.",
-    ],
-    6: [
-      "Explain two strengths of using unstructured interviews in sociological research.",
-      "Using sociological material, give one argument against the view that the peer group is the most important influence in shaping age identity.",
-      "Explain two strengths of using content analysis in sociological research.",
-      "‘Education is the most important influence in shaping class identity.’ Using sociological material, give one argument against this view.",
-      "Explain two strengths of using laboratory experiments in sociological research.",
-      "‘Inadequate socialisation is the main cause of deviant behaviour.’",
-      "Explain one strength and one limitation of liberal feminist views of the family.",
-      "‘Social class is the most important factor affecting the experiences of children in the family.’ Using sociological material, give one argument against this view.",
-      "Explain one strength and one limitation of postmodernist views on family diversity.",
-      "Explain two strengths of functionalist views of the family.",
-    ],
-  };
+ const API_BASE = "https://usefulapis-production.up.railway.app";
 
+  // 🔹 Fetch classes on load
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/classes`);
+        setClasses(res.data);
+      } catch (err) {
+        console.error("Failed to fetch classes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  // 🔹 Fetch subjects whenever class changes
+  useEffect(() => {
+    if (!className) return setSubjects([]);
+    const fetchSubjects = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/subjects?class=${encodeURIComponent(className)}`
+        );
+        setSubjects(res.data);
+      } catch (err) {
+        console.error("Failed to fetch subjects:", err);
+        setSubjects([]);
+      }
+    };
+    fetchSubjects();
+  }, [className]);
+
+  // 🔹 Fetch chapters whenever class or subject changes
+  useEffect(() => {
+    if (!className || !subject) return setChapters([]);
+    const fetchChapters = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/chapters?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}`
+        );
+        setChapters(res.data);
+      } catch (err) {
+        console.error("Failed to fetch chapters:", err);
+        setChapters([]);
+      }
+    };
+    fetchChapters();
+  }, [className, subject]);
+
+  
   // Refresh page
   const handleRefresh = () => {
    // Reset form inputs
@@ -250,51 +276,24 @@ const AiAudioLearning = ({ doctorData }) => {
       }}
     >
       {/* Controls */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 15, marginBottom: 20 }}>
-        {/* Subject */}
-        <div style={{ flex: "1 1 120px", display: "flex", flexDirection: "column" }}>
-          <label style={{ fontWeight: 600, marginBottom: 5 }}>Subject</label>
-          <select
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff" }}
-          >
-            <option value="">-- Select Subject --</option>
-            <option value="sociology">Sociology</option>
-            <option value="economics">Economics</option>
-            <option value="history">History</option>
-            <option value="political_science">Political Science</option>
-            <option value="literature">Literature</option>
-          </select>
-        </div>
+        <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10 w-full">
+          {renderSelect("Class", className, (val) => { setClassName(val); setSubject(""); setChapter(""); }, classes)}
+          {renderSelect("Subject", subject, (val) => { setSubject(val); setChapter(""); }, subjects, !className)}
+          {renderSelect("Chapter", chapter, setChapter, chapters, !subject)}
+          <div className="flex items-end">
+            <button
+              onClick={startConversation}
+              disabled={sessionLoading} // disable button while loading
+              className={`px-4 py-2 rounded-md font-medium ${
+                sessionLoading
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
+            >
+              {sessionLoading ? "Wait..." : "Start Conversation"}
+            </button>
 
-        {/* Marks */}
-        <div style={{ flex: "0 0 90px", display: "flex", flexDirection: "column" }}>
-          <label style={{ fontWeight: 600, marginBottom: 5 }}>Marks</label>
-          <input
-            type="number"
-            value={marks}
-            onChange={(e) => setMarks(Number(e.target.value))}
-            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ccc", textAlign: "center" }}
-          />
-        </div>
-
-        {/* Question */}
-        <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column" }}>
-          <label style={{ fontWeight: 600, marginBottom: 5 }}>Question</label>
-          <select
-            value={questionText}
-            onChange={(e) => setQuestionText(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ccc", background: "#fff" }}
-          >
-            <option value="">-- Select a question --</option>
-            {questionsByMarks[marks]?.map((q, idx) => (
-              <option key={idx} value={q}>
-                {q}
-              </option>
-            ))}
-          </select>
-        </div>
+          </div>
 
         {/* Buttons */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
