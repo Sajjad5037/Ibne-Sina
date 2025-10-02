@@ -110,7 +110,16 @@ export default function SyllabusManager() {
             multiple
             accept="image/*"
             id="imagesInput"
-            onChange={(e) => setImages(Array.from(e.target.files))} // convert FileList to array
+            onChange={(e) => {
+              const files = Array.from(e.target.files);
+              const validFiles = files.filter((file) => file.name.length <= 30);
+          
+              if (validFiles.length < files.length) {
+                alert("Some files were skipped because their names are longer than 30 characters.");
+              }
+          
+              setImages(validFiles);
+            }}
             className="border px-3 py-2 rounded w-full mb-4"
           />
       
