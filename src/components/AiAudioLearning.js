@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
  
 const AiAudioLearning = ({ doctorData }) => {
+  const [className, setClassName] = useState("");
+  const [chapter, setChapter] = useState("");
   const [subject, setSubject] = useState("");
   const [marks, setMarks] = useState("");
   const [questionText, setQuestionText] = useState("");
@@ -10,6 +12,8 @@ const AiAudioLearning = ({ doctorData }) => {
   const [audioSrc, setAudioSrc] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [chapters, setChapters] = useState([]);
+  const [sessionLoading, setSessionLoading] = useState(false);
 
 
   const mediaRecorderRef = useRef(null);
@@ -264,6 +268,25 @@ const AiAudioLearning = ({ doctorData }) => {
       alert("Failed to send audio message.");
     }
   };
+
+  const renderSelect = (label, value, setValue, options, disabled = false) => (
+    <div className="flex flex-col">
+      <label className="font-medium text-gray-700 mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="border border-gray-300 rounded-md px-3 py-2"
+        disabled={disabled}
+      >
+        <option value="">Select {label.toLowerCase()}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div
