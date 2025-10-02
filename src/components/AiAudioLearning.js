@@ -384,38 +384,7 @@ const AiAudioLearning = ({ doctorData }) => {
 
           </div>
 
-        {/* Buttons */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
-          <button
-           onClick={handleStartConversation}
-           disabled={isStartingConversation} // track loading state
-           style={{
-             padding: "10px 16px",
-             borderRadius: 8,
-             border: "none",
-             background: isStartingConversation ? "#007bff" : "#4CAF50", // optional color change
-             color: "#fff",
-             fontWeight: 600,
-             cursor: isStartingConversation ? "not-allowed" : "pointer",
-           }}
-         >
-           {isStartingConversation ? "Starting..." : "Start"}
-         </button>
-          <button
-            onClick={handleRefresh}
-            style={{
-              padding: "10px 16px",
-              borderRadius: 8,
-              border: "none",
-              background: "#2196F3",
-              color: "#fff",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Refresh
-          </button>
-        </div>
+        
       </div>
 
       {/* Chat Window */}
