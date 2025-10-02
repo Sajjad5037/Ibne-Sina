@@ -112,16 +112,20 @@ export default function SyllabusManager() {
             id="imagesInput"
             onChange={(e) => {
               const files = Array.from(e.target.files);
+          
+              // filter valid files only
               const validFiles = files.filter((file) => file.name.length <= 30);
           
               if (validFiles.length < files.length) {
                 alert("Some files were skipped because their names are longer than 30 characters.");
+                e.target.value = ""; // reset input so invalid files don't remain selected
               }
           
               setImages(validFiles);
             }}
             className="border px-3 py-2 rounded w-full mb-4"
           />
+
       
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
