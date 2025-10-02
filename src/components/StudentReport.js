@@ -213,7 +213,7 @@ const StudentReport = ({ doctorData }) => {
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.chapter}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.subject}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
-                    {item.image_urls.join(", ")}
+                    {Array.isArray(item.image_urls) ? item.image_urls.join(", ") : "No images"}
                   </td>
                 </tr>
               ))}
@@ -242,7 +242,7 @@ const StudentReport = ({ doctorData }) => {
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.chapter}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.subject}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
-                    {item.image_urls.join(", ")}
+                    {Array.isArray(item.image_urls) ? item.image_urls.join(", ") : "No images"}
                   </td>
                 </tr>
               ))}
