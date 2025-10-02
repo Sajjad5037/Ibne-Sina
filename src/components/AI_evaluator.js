@@ -255,7 +255,7 @@ const AI_evaluator = ({ doctorData }) => {
       
         {/* PDF Dropdown */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
+          <label className="text-sm font-medium text-gray-700 mb-1">Image name</label>
           <select
             value={selectedPdf}
             onChange={(e) => setSelectedPdf(e.target.value)}
