@@ -202,19 +202,17 @@ const StudentReport = ({ doctorData }) => {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead style={{ backgroundColor: "#007bff", color: "#fff" }}>
               <tr>
-                <th style={{ padding: "12px", textAlign: "left" }}>Chapter Name</th>
-                <th style={{ padding: "12px", textAlign: "left" }}>Subject</th>
                 <th style={{ padding: "12px", textAlign: "left" }}>PDF Name</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Subject</th>
+                <th style={{ padding: "12px", textAlign: "left" }}>Preparedness</th>
               </tr>
             </thead>
             <tbody>
               {wellPreparedReport.map((item, idx) => (
                 <tr key={idx} style={{ backgroundColor: "#fafafa" }}>
-                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.chapter}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.pdf_name}</td>
                   <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.subject}</td>
-                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>
-                    {Array.isArray(item.image_urls) ? item.image_urls.join(", ") : "No images"}
-                  </td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid #e0e0e0" }}>{item.preparedness}</td>
                 </tr>
               ))}
             </tbody>
@@ -223,6 +221,7 @@ const StudentReport = ({ doctorData }) => {
       </div>
     )}
 
+    
     {/* Report 2: Not-prepared chapters */}
     {notPreparedReport.length > 0 && (
       <div>
