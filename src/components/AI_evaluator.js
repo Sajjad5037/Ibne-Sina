@@ -234,8 +234,10 @@ const AI_evaluator = ({ doctorData }) => {
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
       
+      {/* Row with Subject, PDF, and Question */}
       <div className="flex items-start gap-6">
-        {/* Subject */}
+      
+        {/* Subject Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
           <select
@@ -245,20 +247,21 @@ const AI_evaluator = ({ doctorData }) => {
           >
             <option value="">-- Select Subject --</option>
             {subjects.map((subj, idx) => (
-              <option key={idx} value={subj.value}>
-                {subj.label}
+              <option key={idx} value={subj.value ?? subj}>
+                {subj.label ?? subj}
               </option>
             ))}
           </select>
         </div>
       
-        {/* PDF */}
+        {/* PDF Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
           <select
             value={selectedPdf}
             onChange={(e) => setSelectedPdf(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!selectedSubject} // PDF depends on subject
           >
             <option value="">Select PDF</option>
             {pdfs.map((pdf) => (
@@ -269,14 +272,14 @@ const AI_evaluator = ({ doctorData }) => {
           </select>
         </div>
       
-        {/* Question */}
+        {/* Question Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">Question Text</label>
           <select
             value={selectedQuestion}
             onChange={(e) => setSelectedQuestion(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={!selectedPdf}
+            disabled={!selectedPdf} // disable until PDF selected
           >
             <option value="">Select Question</option>
             {questionOptions.map((q, idx) => (
