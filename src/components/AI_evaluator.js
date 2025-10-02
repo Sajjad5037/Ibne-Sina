@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 
 const AI_evaluator = ({ doctorData }) => {
-  const [subjects, setSubjects] = useState([]);
-  const [pdfs, setPdfs] = useState([]);
+  const [subjectOptions, setSubjectOptions] = useState([]);
+  const [pdfOptions, setPdfOptions] = useState([]);
   const [questionOptions, setQuestionOptions] = useState([]);
+
+  const [pdfs, setPdfs] = useState([]);  
+  const [subjects, setSubjects] = useState([]);  
+  const [questions, setQuestions] = useState([]); 
 
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedPdf, setSelectedPdf] = useState("");
@@ -12,97 +16,124 @@ const AI_evaluator = ({ doctorData }) => {
   const [inputMode, setInputMode] = useState("text"); // "text" or "image"
   const [userInput, setUserInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [chatLog, setChatLog] = useState([]);
+  const [chatLog, setChatLog] = useState([]); // Q/A session history
 
-  // --- Fetch subjects on mount ---
+  // --- Step 1: Fetch subjects on mount ---
   useEffect(() => {
+  // Fetch distinct subjects on component mount
     fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
       .then((res) => res.json())
       .then((data) => {
-        const subjectsArray = Array.isArray(data)
-          ? data
-          : data.subjects || [];
-        const mappedSubjects = subjectsArray.map((s) => ({
-          label: String(s),
-          value: String(s),
+        console.log("Subjects data from API:", data);
+        const subjects = data.subjects || data;
+        console.log("Subjects mapped:", subjects);
+      
+        const subjectMap = subjects.map((subject) => ({
+          label: subject,
+          value: subject,
         }));
-        setSubjects(mappedSubjects);
+        setSubjects(subjectMap);
       })
       .catch((err) => console.error("Error fetching subjects:", err));
   }, []);
-
-  // --- Fetch PDFs when subject changes ---
+  // --- Step 2: Fetch pdfs on mount ---
   useEffect(() => {
     if (!selectedSubject) {
       setPdfs([]);
       setSelectedPdf("");
       return;
     }
-
+  
     fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
       .then((res) => res.json())
       .then((data) => {
-        const urls = data.pdfs || data || [];
-        const mappedPdfs = urls.map((url) => {
-          const fullName = url.split("/").pop();
-          const shortName = fullName.split("_").slice(-2).join("_");
+        const urls = data.pdfs || data;
+  
+        // Map to show short name but keep full name for backend
+        const pdfMap = urls.map((url) => {
+          const fullName = url.split("/").pop();          // e.g., "bfdd7c5b-a9c0-44d2-bfad-5e4da6b5fdb5_page_5.png"
+          const shortName = fullName.split("_").slice(-2).join("_"); // "page_5.png"
           return {
-            label: String(shortName),
-            value: String(fullName),
+            label: shortName,  // shown in dropdown
+            value: fullName,   // sent to backend
           };
         });
-        setPdfs(mappedPdfs);
+  
+        setPdfs(pdfMap);
       })
       .catch((err) => console.error("Error fetching PDFs:", err));
   }, [selectedSubject]);
 
-  // --- Fetch questions when PDF changes ---
+
+  // --- Step 3: Fetch questions when PDF changes ---
   useEffect(() => {
     if (!selectedPdf) {
-      setQuestionOptions([]);
+      setQuestions([]);
       return;
     }
-
-    fetch(`https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const questions = Array.isArray(data) ? data : [];
-        setQuestionOptions(questions.map((q) => String(q)));
-      })
-      .catch((err) => {
-        console.error("Error fetching questions:", err);
-        setQuestionOptions([]);
-      });
+  
+    console.log("Fetching questions for PDF filename:", selectedPdf); // debug
+  
+    fetch(
+    `https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`
+  )
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("[DEBUG] ✅ Questions received from backend:", data);
+      setQuestionOptions(Array.isArray(data) ? data : []); // ensure it's always an array
+    })
+    .catch((err) => {
+      console.error("[DEBUG] ❌ Error fetching questions:", err);
+      setQuestionOptions([]); // fallback to empty
+    });
   }, [selectedPdf]);
 
-  const handleFinish = async () => {
+  
+  
+    const handleFinish = async () => {
+      // --- Debug log to check doctorData ---
+      console.log("[DEBUG] Frontend variables for finish_session:");
+      console.log(
+        "selectedSubject =", selectedSubject || "[MISSING]",
+        "| selectedPdf =", selectedPdf || "[MISSING]",
+        "| student_id =", doctorData?.id ?? "[MISSING]",
+        "| student_name =", doctorData?.name ?? "[MISSING]",
+        "| preparedness =", "Well prepared"
+      );
+    
+    // --- Prepare payload ---
     const payload = {
       subject: selectedSubject,
-      student_id: String(doctorData?.id),
+      student_id: String(doctorData?.id),       // convert to string
       student_name: doctorData?.name,
       pdf: selectedPdf,
-      preparedness: "Well prepared",
+      preparedness: "Well prepared"
     };
-
+  
     try {
       const response = await fetch(
         "https://usefulapis-production.up.railway.app/api/finish_session_ibne_sina",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         }
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error finishing session:", errorData);
         alert(errorData.detail || "Failed to finish session.");
         return;
       }
-
+  
       const data = await response.json();
+  
+      // --- Show confirmation ---
       alert(data.message || "Session successfully saved!");
-      // Reset states
+      // Optionally, reset states
       setChatLog([]);
       setSelectedSubject("");
       setSelectedPdf("");
@@ -114,19 +145,26 @@ const AI_evaluator = ({ doctorData }) => {
     }
   };
 
+  
   const handleEvaluate = async () => {
+    // --- Step 1: Validate selections ---
     if (!selectedSubject || !selectedPdf || !selectedQuestion) {
       alert("Please select a subject, PDF, and question first.");
       return;
     }
-
+  
+    // --- Step 2: Prepare FormData ---
     const formData = new FormData();
     formData.append("subject", selectedSubject);
-    formData.append("pdf", selectedPdf);
+  
+    // Use selectedPdf.value to ensure full PDF name is sent
+    const fullPdfName = selectedPdf.value || selectedPdf; 
+    formData.append("pdf", fullPdfName);
+  
     formData.append("question", selectedQuestion);
-
+  
     let studentAnswer = "";
-
+  
     if (inputMode === "image" && uploadedImage) {
       formData.append("image", uploadedImage);
       studentAnswer = `[Image: ${uploadedImage.name}]`;
@@ -137,55 +175,68 @@ const AI_evaluator = ({ doctorData }) => {
       alert("Please provide an answer before evaluating.");
       return;
     }
-
+  
+    // --- Step 3: Add student's answer to chat log ---
     setChatLog((prev) => [...prev, { sender: "student", message: studentAnswer }]);
-
+  
+    // --- Step 4: Send request to backend ---
     try {
       const response = await fetch(
         "https://usefulapis-production.up.railway.app/api/evaluate_ibne_sina",
         { method: "POST", body: formData }
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error evaluating:", errorData);
         alert(errorData.detail || "Error evaluating the answer.");
         return;
       }
-
+  
       const data = await response.json();
+  
+      // --- Step 5: Update chat log with AI evaluation ---
       setChatLog((prev) => [
         ...prev,
         { sender: "ai", message: `✅ Student Answer: ${data.student_answer}` },
         { sender: "ai", message: `📘 Correct Answer: ${data.correct_answer}` },
         { sender: "ai", message: `📝 Feedback: ${data.evaluation}` },
       ]);
-
+  
+      // --- Step 6: Remove question if student passed ---
       if (data.passed) {
-        setQuestionOptions((prevOptions) =>
-          prevOptions.filter((q) => q.trim() !== selectedQuestion.trim())
-        );
+        console.log("✅ Question passed:", selectedQuestion);
+  
+        setQuestionOptions((prevOptions) => {
+          const normalize = (str) => str.trim().replace(/\s+/g, " ");
+          return prevOptions.filter((q) => normalize(q) !== normalize(selectedQuestion));
+        });
+      } else {
+        console.log("[DEBUG] ❌ data.passed is false, question stays for retry");
       }
     } catch (err) {
       console.error("Error evaluating:", err);
       alert("Failed to evaluate the answer. Please try again.");
     }
-
+  
+    // --- Step 7: Reset input fields ---
     setUserInput("");
     setUploadedImage(null);
   };
-
-  const handleImageUpload = (e) => {
-    if (e.target.files.length > 0) {
-      setUploadedImage(e.target.files[0]);
-      setUserInput("");
-    }
-  };
+  
+    const handleImageUpload = (e) => {
+      if (e.target.files.length > 0) {
+        setUploadedImage(e.target.files[0]);
+        setUserInput(""); // clear text if switching to image
+      }
+    };
 
   return (
     <div className="p-6 bg-gray-100 rounded-xl shadow-md space-y-6">
-      {/* Dropdown Row */}
-      <div className="flex flex-wrap gap-6 items-start">
-        {/* Subject */}
+      
+      <div className="flex items-start gap-6">
+
+        {/* Subject Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
           <select
@@ -201,15 +252,15 @@ const AI_evaluator = ({ doctorData }) => {
             ))}
           </select>
         </div>
-
-        {/* PDF */}
+      
+        {/* PDF Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
           <select
             value={selectedPdf}
             onChange={(e) => setSelectedPdf(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={!selectedSubject}
+            disabled={!selectedSubject} // PDF depends on subject
           >
             <option value="">Select PDF</option>
             {pdfs.map((pdf) => (
@@ -219,15 +270,15 @@ const AI_evaluator = ({ doctorData }) => {
             ))}
           </select>
         </div>
-
-        {/* Question */}
+      
+        {/* Question Dropdown */}
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-1">Question Text</label>
           <select
             value={selectedQuestion}
             onChange={(e) => setSelectedQuestion(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={!selectedPdf}
+            disabled={!selectedPdf} // disable until PDF selected
           >
             <option value="">Select Question</option>
             {questionOptions.map((q, idx) => (
@@ -239,6 +290,8 @@ const AI_evaluator = ({ doctorData }) => {
         </div>
       </div>
 
+
+
       {/* Chat Window */}
       <div className="border rounded-lg bg-white p-4 h-64 overflow-y-auto shadow-inner">
         {chatLog.length === 0 ? (
@@ -249,11 +302,15 @@ const AI_evaluator = ({ doctorData }) => {
           chatLog.map((entry, idx) => (
             <div
               key={idx}
-              className={`mb-3 ${entry.sender === "student" ? "text-right" : "text-left"}`}
+              className={`mb-3 ${
+                entry.sender === "student" ? "text-right" : "text-left"
+              }`}
             >
               <span
                 className={`inline-block px-3 py-2 rounded-lg text-sm whitespace-pre-line ${
-                  entry.sender === "student" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+                  entry.sender === "student"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-800"
                 }`}
               >
                 {entry.message}
@@ -263,7 +320,7 @@ const AI_evaluator = ({ doctorData }) => {
         )}
       </div>
 
-      {/* Input Mode */}
+      {/* Input Mode Selector */}
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <input
@@ -293,7 +350,7 @@ const AI_evaluator = ({ doctorData }) => {
         </label>
       </div>
 
-      {/* Input Area */}
+      {/* Conditionally Render Input */}
       {inputMode === "text" ? (
         <textarea
           className="w-full p-2 border rounded-lg"
@@ -304,31 +361,39 @@ const AI_evaluator = ({ doctorData }) => {
         />
       ) : (
         <div className="flex flex-col">
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
-          {uploadedImage && <p className="text-xs text-gray-600 mt-1">Selected: {uploadedImage.name}</p>}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="text-sm"
+          />
+          {uploadedImage && (
+            <p className="text-xs text-gray-600 mt-1">
+              Selected: {uploadedImage.name}
+            </p>
+          )}
         </div>
       )}
 
-      {/* Buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={handleEvaluate}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow"
-        >
-          Submit Answer
-        </button>
-        <button
-          onClick={handleFinish}
-          disabled={questionOptions.length > 0}
-          className={`px-4 py-2 rounded-lg font-medium shadow ${
-            questionOptions.length > 0
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
-        >
-          Finish
-        </button>
-      </div>
+      {/* Evaluate Button */}
+      <button
+        onClick={handleEvaluate}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow"
+      >
+        Submit Answer
+      </button>
+      <button
+        onClick={handleFinish}
+        disabled={questionOptions.length > 0} // disable while questions remain
+        className={`px-4 py-2 rounded-lg font-medium shadow ${
+          questionOptions.length > 0
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700 text-white"
+        }`}
+      >
+        Finish
+      </button>
+          
     </div>
   );
 };
