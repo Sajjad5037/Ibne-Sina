@@ -19,56 +19,74 @@ const AI_evaluator = ({ doctorData }) => {
   const [chatLog, setChatLog] = useState([]); // Q/A session history
 
   // --- Step 1: Fetch subjects on mount ---
-useEffect(() => {
-  if (!selectedSubject) {
-    setPdfs([]);
-    setSelectedPdf("");
-    return;
-  }
+  useEffect(() => {
+  // Fetch distinct subjects on component mount
+    fetch("https://usefulapis-production.up.railway.app/distinct_subjects_ibne_sina")
+      .then((res) => res.json())
+      .then((data) => {
+        const subjects = data.subjects || data; // handle either key or raw array
+  
+        // Map for dropdown
+        const subjectMap = subjects.map((subject) => ({
+          label: subject, // shown in dropdown
+          value: subject, // used in backend calls
+        }));
+  
+        setSubjects(subjectMap);
+      })
+      .catch((err) => console.error("Error fetching subjects:", err));
+  }, []);
+  // --- Step 2: Fetch pdfs on mount ---
+  useEffect(() => {
+    if (!selectedSubject) {
+      setPdfs([]);
+      setSelectedPdf("");
+      return;
+    }
+  
+    fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const urls = data.pdfs || data;
+  
+        // Map to show short name but keep full name for backend
+        const pdfMap = urls.map((url) => {
+          const fullName = url.split("/").pop();          // e.g., "bfdd7c5b-a9c0-44d2-bfad-5e4da6b5fdb5_page_5.png"
+          const shortName = fullName.split("_").slice(-2).join("_"); // "page_5.png"
+          return {
+            label: shortName,  // shown in dropdown
+            value: fullName,   // sent to backend
+          };
+        });
+  
+        setPdfs(pdfMap);
+      })
+      .catch((err) => console.error("Error fetching PDFs:", err));
+  }, [selectedSubject]);
 
-  fetch(`https://usefulapis-production.up.railway.app/distinct_pdfs_ibne_sina?subject=${encodeURIComponent(selectedSubject)}`)
+
+  // --- Step 3: Fetch questions when PDF changes ---
+  useEffect(() => {
+    if (!selectedPdf) {
+      setQuestions([]);
+      return;
+    }
+  
+    console.log("Fetching questions for PDF filename:", selectedPdf); // debug
+  
+    fetch(
+    `https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`
+  )
     .then((res) => res.json())
     .then((data) => {
-      const urls = data.pdfs || data;
-
-      // Map to show short name but keep full name for backend
-      const pdfMap = urls.map((url) => {
-        const fullName = url.split("/").pop();          // e.g., "bfdd7c5b-a9c0-44d2-bfad-5e4da6b5fdb5_page_5.png"
-        const shortName = fullName.split("_").slice(-2).join("_"); // "page_5.png"
-        return {
-          label: shortName,  // shown in dropdown
-          value: fullName,   // sent to backend
-        };
-      });
-
-      setPdfs(pdfMap);
+      console.log("[DEBUG] ✅ Questions received from backend:", data);
+      setQuestionOptions(Array.isArray(data) ? data : []); // ensure it's always an array
     })
-    .catch((err) => console.error("Error fetching PDFs:", err));
-}, [selectedSubject]);
-
-
-// --- Step 3: Fetch questions when PDF changes ---
-useEffect(() => {
-  if (!selectedPdf) {
-    setQuestions([]);
-    return;
-  }
-
-  console.log("Fetching questions for PDF filename:", selectedPdf); // debug
-
-  fetch(
-  `https://usefulapis-production.up.railway.app/questions_by_pdf_ibne_sina?pdf_name=${encodeURIComponent(selectedPdf)}`
-)
-  .then((res) => res.json())
-  .then((data) => {
-    console.log("[DEBUG] ✅ Questions received from backend:", data);
-    setQuestionOptions(Array.isArray(data) ? data : []); // ensure it's always an array
-  })
-  .catch((err) => {
-    console.error("[DEBUG] ❌ Error fetching questions:", err);
-    setQuestionOptions([]); // fallback to empty
-  });
-}, [selectedPdf]);
+    .catch((err) => {
+      console.error("[DEBUG] ❌ Error fetching questions:", err);
+      setQuestionOptions([]); // fallback to empty
+    });
+  }, [selectedPdf]);
 
   
   
