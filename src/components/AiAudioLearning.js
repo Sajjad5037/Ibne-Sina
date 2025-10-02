@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
  
 const AiAudioLearning = ({ doctorData }) => {
   const [className, setClassName] = useState("");
+  const [classes, setClasses] = useState([]);
   const [chapter, setChapter] = useState("");
   const [subject, setSubject] = useState("");
   const [marks, setMarks] = useState("");
+  const [loading, setLoading] = useState(true);
   const [questionText, setQuestionText] = useState("");
+  const [subjects, setSubjects] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [chatLog, setChatLog] = useState([]);
@@ -79,6 +83,68 @@ const AiAudioLearning = ({ doctorData }) => {
     };
     fetchChapters();
   }, [className, subject]);
+
+
+ const startConversation = async () => {
+  if (!className || !subject || !chapter) {
+    alert("Please select class, subject, and chapter first.");
+    return;
+  }
+
+  setMessages([
+    {
+      text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+      sender: "bot",
+    },
+  ]);
+
+  setSessionLoading(true); // 🔹 start loading for this button
+
+  try {
+    const resImages = await axios.get(
+      `${API_BASE}/chapter-images?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}`
+    );
+    const selectedPages = resImages.data;
+
+    if (!selectedPages.length) {
+      setMessages((prev) => [
+        ...prev,
+        { text: "No images found for this chapter.", sender: "bot" },
+      ]);
+      return;
+    }
+
+    const response = await fetch(`${API_BASE}/start-session-ibne-sina`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        className,
+        subject,
+        chapter,
+        pages: selectedPages,
+        name: doctorData.name,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
+      const backendMessage = data.message || "Session initialized successfully.";
+      setMessages((prev) => [...prev, { text: backendMessage, sender: "bot" }]);
+    } else {
+      throw new Error("No session ID returned from backend.");
+    }
+  } catch (error) {
+    console.error("Error starting session:", error);
+    setMessages((prev) => [
+      ...prev,
+      { text: "Failed to start session. Please try again.", sender: "bot" },
+    ]);
+  } finally {
+    setSessionLoading(false); // 🔹 stop loading for this button
+  }
+};
 
   
   // Refresh page
