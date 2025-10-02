@@ -9,7 +9,7 @@ const ChatbotTrainerUI = ({ doctorData }) => {
   const [subjects, setSubjects] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [sessionLoading, setSessionLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState(null);
@@ -68,64 +68,65 @@ const ChatbotTrainerUI = ({ doctorData }) => {
 
   // 🔹 Start training session
   const startConversation = async () => {
-    if (!className || !subject || !chapter) {
-      alert("Please select class, subject, and chapter first.");
-      return;
-    }
-  
-    setMessages([
-      {
-        text: `Training session started for ${subject} > ${chapter} > ${className}.`,
-        sender: "bot",
-      },
-    ]);
-  
-    try {
-      // 🔹 Fetch the chapter images first
-      const resImages = await axios.get(
-        `${API_BASE}/chapter-images?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}`
-      );
-      const selectedPages = resImages.data; // array of image URLs
-  
-      if (!selectedPages.length) {
-        setMessages((prev) => [
-          ...prev,
-          { text: "No images found for this chapter.", sender: "bot" },
-        ]);
-        return;
-      }
-  
-      // 🔹 Start training session with images
-      const response = await fetch(`${API_BASE}/start-session-ibne-sina`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          className,
-          subject,
-          chapter,
-          pages: selectedPages, // send images here
-          name: doctorData.name,
-        }),
-      });
-  
-      const data = await response.json();
-  
-      if (data.sessionId) {
-        setSessionId(data.sessionId);
-        const backendMessage = data.message || "Session initialized successfully.";
-        setMessages((prev) => [...prev, { text: backendMessage, sender: "bot" }]);
-      } else {
-        throw new Error("No session ID returned from backend.");
-      }
-    } catch (error) {
-      console.error("Error starting session:", error);
+  if (!className || !subject || !chapter) {
+    alert("Please select class, subject, and chapter first.");
+    return;
+  }
+
+  setMessages([
+    {
+      text: `Training session started for ${subject} > ${chapter} > ${className}.`,
+      sender: "bot",
+    },
+  ]);
+
+  setSessionLoading(true); // 🔹 start loading for this button
+
+  try {
+    const resImages = await axios.get(
+      `${API_BASE}/chapter-images?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}`
+    );
+    const selectedPages = resImages.data;
+
+    if (!selectedPages.length) {
       setMessages((prev) => [
         ...prev,
-        { text: "Failed to start session. Please try again.", sender: "bot" },
+        { text: "No images found for this chapter.", sender: "bot" },
       ]);
+      return;
     }
-  };
 
+    const response = await fetch(`${API_BASE}/start-session-ibne-sina`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        className,
+        subject,
+        chapter,
+        pages: selectedPages,
+        name: doctorData.name,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
+      const backendMessage = data.message || "Session initialized successfully.";
+      setMessages((prev) => [...prev, { text: backendMessage, sender: "bot" }]);
+    } else {
+      throw new Error("No session ID returned from backend.");
+    }
+  } catch (error) {
+    console.error("Error starting session:", error);
+    setMessages((prev) => [
+      ...prev,
+      { text: "Failed to start session. Please try again.", sender: "bot" },
+    ]);
+  } finally {
+    setSessionLoading(false); // 🔹 stop loading for this button
+  }
+};
 
   // 🔹 Send message to the tutor
   const handleSendMessage = async () => {
@@ -203,10 +204,16 @@ const ChatbotTrainerUI = ({ doctorData }) => {
           <div className="flex items-end">
             <button
               onClick={startConversation}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              disabled={sessionLoading} // disable button while loading
+              className={`px-4 py-2 rounded-md font-medium ${
+                sessionLoading
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
             >
-              Start Conversation
+              {sessionLoading ? "Wait..." : "Start Conversation"}
             </button>
+
           </div>
         </div>
 
