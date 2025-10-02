@@ -70,20 +70,19 @@ const StudentReport = ({ doctorData }) => {
         }),
       }
     );
-
     if (!wellPreparedRes.ok) throw new Error("Failed to fetch well-prepared report");
 
     const wellPreparedData = await wellPreparedRes.json();
     console.log("Well-prepared report:", wellPreparedData);
     setWellPreparedReport(wellPreparedData);
 
-    // --- 2️⃣ Fetch all chapters from syllabus ---
+    // --- 2️⃣ Fetch all chapters for the subject (second backend call) ---
     const syllabusRes = await fetch(
       "https://usefulapis-production.up.railway.app/syllabus_chapters",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subject }),
+        body: JSON.stringify({ subject: subject }), // only subject
       }
     );
 
@@ -94,9 +93,11 @@ const StudentReport = ({ doctorData }) => {
 
     // --- 3️⃣ Filter chapters not in well-prepared report ---
     const notPreparedData = syllabusData.filter(
-      (chapter) => !wellPreparedData.some(
-        (wp) => wp.pdf_name === chapter.chapter // assuming first report uses pdf_name as chapter identifier
-      )
+      (chapter) =>
+        !wellPreparedData.some(
+          (wp) =>
+            wp.pdf_name === chapter.chapter && wp.subject === chapter.subject
+        )
     );
 
     console.log("Not prepared report:", notPreparedData);
