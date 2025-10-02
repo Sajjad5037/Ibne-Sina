@@ -238,38 +238,31 @@ const AI_evaluator = ({ doctorData }) => {
         <div className="flex items-start gap-6">
         
           {/* Subject Dropdown */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">Subject</label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">-- Select Subject --</option>
-              {subjects.map((subj, idx) => (
-                <option key={idx} value={subj}>
-                  {subj}
-                </option>
-              ))}
-            </select>
-          </div>
-        
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+          >
+            <option value="">-- Select Subject --</option>
+            {subjects.map((subj, idx) => (
+              <option key={idx} value={subj.value}>
+                {subj.label}
+              </option>
+            ))}
+          </select>
+          
           {/* PDF Dropdown */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">PDF name</label>
-            <select
-              value={selectedPdf}
-              onChange={(e) => setSelectedPdf(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select PDF</option>
-              {pdfs.map((pdf) => (
-                <option key={pdf.value} value={pdf.value}>
-                  {pdf.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={selectedPdf}
+            onChange={(e) => setSelectedPdf(e.target.value)}
+          >
+            <option value="">Select PDF</option>
+            {pdfs.map((pdf) => (
+              <option key={pdf.value} value={pdf.value}>
+                {pdf.label}
+              </option>
+            ))}
+          </select>
+
         
           {/* Question Dropdown */}
           <div className="flex flex-col">
