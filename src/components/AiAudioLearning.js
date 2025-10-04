@@ -143,7 +143,7 @@ const AiAudioLearning = ({ doctorData }) => {
     console.log("[DEBUG] Awaiting JSON response from backend");
     const data = await response.json();
     console.log("[DEBUG] Backend response:", data);
-    if (data.text_reply) {
+    if (data.message) {
       setChatLog((prev) => [...prev, { sender: "bot", text: data.text_reply }]);
     }
 
