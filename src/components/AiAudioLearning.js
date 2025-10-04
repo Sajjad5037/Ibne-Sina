@@ -91,7 +91,11 @@ const AiAudioLearning = ({ doctorData }) => {
 
 
  const startConversation = async () => {
+  console.log("[DEBUG] startConversation called");
+  console.log(`[DEBUG] Selected class: ${className}, subject: ${subject}, chapter: ${chapter}`);
+
   if (!className || !subject || !chapter) {
+    console.warn("[WARN] Missing class, subject, or chapter selection");
     alert("Please select class, subject, and chapter first.");
     return;
   }
@@ -104,14 +108,18 @@ const AiAudioLearning = ({ doctorData }) => {
   ]);
 
   setSessionLoading(true);
+  console.log("[DEBUG] Session loading started");
 
   try {
+    console.log("[DEBUG] Fetching chapter images...");
     const resImages = await axios.get(
       `${API_BASE}/chapter-images?class=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}`
     );
     const selectedPages = resImages.data;
+    console.log(`[DEBUG] Received ${selectedPages.length} pages from backend`);
 
     if (!selectedPages.length) {
+      console.warn("[WARN] No images found for this chapter");
       setMessages((prev) => [
         ...prev,
         { text: "No images found for this chapter.", sender: "bot" },
@@ -119,6 +127,7 @@ const AiAudioLearning = ({ doctorData }) => {
       return;
     }
 
+    console.log("[DEBUG] Starting session with backend...");
     const response = await fetch(`${API_BASE}/start-session-ibne-sina-audio`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -131,31 +140,40 @@ const AiAudioLearning = ({ doctorData }) => {
       }),
     });
 
+    console.log("[DEBUG] Awaiting JSON response from backend");
     const data = await response.json();
+    console.log("[DEBUG] Backend response:", data);
 
     if (data.sessionId) {
+      console.log(`[DEBUG] Session created with ID: ${data.sessionId}`);
       setSessionId(data.sessionId);
 
       const backendMessage = data.message || "Session initialized successfully.";
+      console.log(`[DEBUG] Backend message: ${backendMessage}`);
       setMessages((prev) => [...prev, { text: backendMessage, sender: "bot" }]);
 
-      // ✅ New: handle audio URL
+      // Handle audio URL
       if (data.audioUrl) {
+        console.log(`[DEBUG] Received audio URL: ${API_BASE}${data.audioUrl}`);
         setAudioSrc(`${API_BASE}${data.audioUrl}`);
+      } else {
+        console.warn("[WARN] No audio URL returned from backend");
       }
     } else {
       throw new Error("No session ID returned from backend.");
     }
   } catch (error) {
-    console.error("Error starting session:", error);
+    console.error("[ERROR] Error starting session:", error);
     setMessages((prev) => [
       ...prev,
       { text: "Failed to start session. Please try again.", sender: "bot" },
     ]);
   } finally {
     setSessionLoading(false);
+    console.log("[DEBUG] Session loading ended");
   }
 };
+
 
   
   // Refresh page
