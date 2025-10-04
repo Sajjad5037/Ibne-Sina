@@ -25,7 +25,12 @@ const AiAudioLearning = ({ doctorData }) => {
   const audioRef = useRef(null);
   const chatWindowRef = useRef(null);
 
- 
+
+  useEffect(() => {
+   if (audioSrc && audioRef.current) {
+     audioRef.current.play().catch((err) => console.log("Autoplay blocked:", err));
+   }
+ }, [audioSrc]);
   // Auto-scroll chat
   useEffect(() => {
     if (chatWindowRef.current) {
