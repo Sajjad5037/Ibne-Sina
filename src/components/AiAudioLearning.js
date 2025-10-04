@@ -98,7 +98,7 @@ const AiAudioLearning = ({ doctorData }) => {
     },
   ]);
 
-  setSessionLoading(true); // 🔹 start loading for this button
+  setSessionLoading(true);
 
   try {
     const resImages = await axios.get(
@@ -114,7 +114,7 @@ const AiAudioLearning = ({ doctorData }) => {
       return;
     }
 
-    const response = await fetch(`${API_BASE}/start-session-ibne-sina`, {
+    const response = await fetch(`${API_BASE}/start-session-ibne-sina-audio`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -130,8 +130,14 @@ const AiAudioLearning = ({ doctorData }) => {
 
     if (data.sessionId) {
       setSessionId(data.sessionId);
+
       const backendMessage = data.message || "Session initialized successfully.";
       setMessages((prev) => [...prev, { text: backendMessage, sender: "bot" }]);
+
+      // ✅ New: handle audio URL
+      if (data.audioUrl) {
+        setAudioSrc(`${API_BASE}${data.audioUrl}`);
+      }
     } else {
       throw new Error("No session ID returned from backend.");
     }
@@ -142,7 +148,7 @@ const AiAudioLearning = ({ doctorData }) => {
       { text: "Failed to start session. Please try again.", sender: "bot" },
     ]);
   } finally {
-    setSessionLoading(false); // 🔹 stop loading for this button
+    setSessionLoading(false);
   }
 };
 
@@ -184,85 +190,7 @@ const AiAudioLearning = ({ doctorData }) => {
 
 
   // Start conversation
-  const handleStartConversation = async () => {
-  // Validate required fields
-  if (!subject || !marks || !questionText) {
-    alert("⚠️ Please fill in all fields before starting the conversation.");
-    return;
-  }
-
-  try {
-    setIsStartingConversation(true); // show "Starting..." on button
-
-    const payload = {
-      subject,
-      marks,
-      question_text: questionText,
-      username: doctorData?.name || "Guest",
-    };
-
-    console.log("[DEBUG] Starting conversation with payload:", payload);
-
-    const response = await fetch(
-      "https://usefulapis-production.up.railway.app/chat_anz_way_model_evaluation_audio",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    if (!response.ok) throw new Error(`Backend error: ${response.statusText}`);
-
-    const data = await response.json();
-    console.log("[DEBUG] Conversation started, backend response:", data);
-
-    // Save session ID
-    if (data.session_id) setSessionId(data.session_id);
-
-    // Add initial bot text reply
-    if (data.text_reply) {
-      setChatLog((prev) => [...prev, { sender: "bot", text: data.text_reply }]);
-    }
-
-    // Poll for audio if session exists
-    if (data.session_id) {
-      const interval = setInterval(async () => {
-        try {
-          const audioRes = await fetch(
-            `https://usefulapis-production.up.railway.app/get-audio/${data.session_id}`
-          );
-
-          if (!audioRes.ok) throw new Error(`Audio fetch error: ${audioRes.statusText}`);
-          const audioData = await audioRes.json();
-
-          if (audioData.audio_ready && audioData.audio_base64) {
-            clearInterval(interval);
-
-            const src = `data:audio/mp3;base64,${audioData.audio_base64}`;
-            setAudioSrc(src);
-
-            if (audioRef.current && audioRef.current.src !== src) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-              audioRef.current.src = src;
-              audioRef.current.play().catch((e) => console.error("⚠️ Audio play error:", e));
-            }
-          }
-        } catch (err) {
-          console.error("❌ Error fetching audio:", err);
-          clearInterval(interval);
-        }
-      }, 2000);
-    }
-  } catch (error) {
-    console.error("❌ Error starting conversation:", error);
-    alert("Something went wrong. Please try again.");
-  } finally {
-    setIsStartingConversation(false); // reset button state
-  }
-};
-
+  
 
   // Voice recording
   const startRecording = async () => {
@@ -364,30 +292,48 @@ const AiAudioLearning = ({ doctorData }) => {
         background: "#f0f4f8",
       }}
     >
-      {/* Controls */}
-        <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10 w-full">
-          {renderSelect("Class", className, (val) => { setClassName(val); setSubject(""); setChapter(""); }, classes)}
-          {renderSelect("Subject", subject, (val) => { setSubject(val); setChapter(""); }, subjects, !className)}
-          {renderSelect("Chapter", chapter, setChapter, chapters, !subject)}
-          <div className="flex items-end">
-            <button
-              onClick={startConversation}
-              disabled={sessionLoading} // disable button while loading
-              className={`px-4 py-2 rounded-md font-medium ${
-                sessionLoading
-                  ? "bg-green-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
-            >
-              {sessionLoading ? "Wait..." : "Start Conversation"}
-            </button>
-
-          </div>
-
-        
+      {/* --- Controls --- */}
+      <div className="flex flex-wrap gap-4 p-4 bg-gray-100 shadow z-10 w-full">
+        {renderSelect(
+          "Class",
+          className,
+          (val) => {
+            setClassName(val);
+            setSubject("");
+            setChapter("");
+          },
+          classes
+        )}
+  
+        {renderSelect(
+          "Subject",
+          subject,
+          (val) => {
+            setSubject(val);
+            setChapter("");
+          },
+          subjects,
+          !className
+        )}
+  
+        {renderSelect("Chapter", chapter, setChapter, chapters, !subject)}
+  
+        <div className="flex items-end">
+          <button
+            onClick={startConversation}
+            disabled={sessionLoading}
+            className={`px-4 py-2 rounded-md font-medium ${
+              sessionLoading
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 text-white"
+            }`}
+          >
+            {sessionLoading ? "Wait..." : "Start Conversation"}
+          </button>
+        </div>
       </div>
-
-      {/* Chat Window */}
+  
+      {/* --- Chat Window --- */}
       <div
         ref={chatWindowRef}
         style={{
@@ -403,7 +349,10 @@ const AiAudioLearning = ({ doctorData }) => {
         {chatLog.map((msg, index) => (
           <div
             key={index}
-            style={{ marginBottom: 10, textAlign: msg.sender === "user" ? "right" : "left" }}
+            style={{
+              marginBottom: 10,
+              textAlign: msg.sender === "user" ? "right" : "left",
+            }}
           >
             <span
               style={{
@@ -421,8 +370,8 @@ const AiAudioLearning = ({ doctorData }) => {
           </div>
         ))}
       </div>
-
-      {/* Voice Assistant */}
+  
+      {/* --- Voice Assistant --- */}
       <div
         style={{
           textAlign: "center",
@@ -434,6 +383,8 @@ const AiAudioLearning = ({ doctorData }) => {
         }}
       >
         <div style={{ marginBottom: 20, fontWeight: 600 }}>Talk to AI Tutor</div>
+  
+        {/* Record button */}
         <button
           onClick={isRecording ? stopRecording : startRecording}
           style={{
@@ -448,7 +399,16 @@ const AiAudioLearning = ({ doctorData }) => {
             outline: "none",
           }}
         >
-          <div style={{ width: 20, height: 20, background: "#fff", borderRadius: "50%", margin: "0 auto", marginTop: 30 }} />
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              background: "#fff",
+              borderRadius: "50%",
+              margin: "0 auto",
+              marginTop: 30,
+            }}
+          />
           {isRecording && (
             <div
               style={{
@@ -464,20 +424,23 @@ const AiAudioLearning = ({ doctorData }) => {
             />
           )}
         </button>
+  
+        {/* Audio player */}
         <audio
-         ref={audioRef}
-         controls
-         src={audioSrc || ""}
-         style={{
-           display: "block",
-           margin: "16px auto 0",
-           width: "100%",
-           maxWidth: 320,               // reduced from 400
-           borderRadius: 8,
-         }}
-       />
+          ref={audioRef}
+          controls
+          autoPlay   // 👈 auto-play audio when src changes
+          src={audioSrc || ""}
+          style={{
+            display: "block",
+            margin: "16px auto 0",
+            width: "100%",
+            maxWidth: 320,
+            borderRadius: 8,
+          }}
+        />
       </div>
-
+  
       <style>
         {`
           @keyframes pulse {
@@ -489,6 +452,7 @@ const AiAudioLearning = ({ doctorData }) => {
       </style>
     </div>
   );
+
 };
 
 export default AiAudioLearning;
