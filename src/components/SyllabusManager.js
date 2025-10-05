@@ -17,16 +17,24 @@ export default function SyllabusManager() {
 
   {/* Fetching ids so user can edit syllabus */}
   useEffect(() => {
-  fetch("http://localhost:5000/api/ids")
-    .then(res => res.json())
-    .then(data => setIds(data))   // data = [{id:1}, {id:2}, ...]
-    .catch(err => console.error("Error fetching IDs:", err));
+  fetch("https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/ids")
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Failed to fetch IDs");
+      }
+      return res.json();
+    })
+    .then((data) => {
+      setIds(data); // e.g. [{ id: 1 }, { id: 2 }, ...]
+    })
+    .catch((err) => console.error("Error fetching IDs:", err));
 }, []);
+
 
   {/* Fetching classname,subject,chapter against id so user can edit syllabus */}
   useEffect(() => {
   if (selectedId) {
-    fetch(`http://localhost:5000/api/details/${selectedId}`)
+    fetch(`https://usefulapis-production.up.railway.app/api/details/${selectedId}`)
       .then(res => res.json())
       .then(data => {
         setEditClassName(data.className);
@@ -51,7 +59,7 @@ export default function SyllabusManager() {
     }
   
     try {
-      const response = await fetch(`http://localhost:5000/api/edit/${id}`, {
+      const response = await fetch(`https://usefulapis-production.up.railway.app/api/edit/${id}`, {
         method: "PUT", // or "POST" if your backend uses POST for updates
         headers: {
           "Content-Type": "application/json",
