@@ -356,28 +356,34 @@ const handleDelete = async () => {
       {activeTab === "View All" && (
         <div>
           <h3 className="font-semibold mb-2">All Syllabus Entries</h3>
-          <ul className="list-disc list-inside border rounded p-2">
-            {allEntries.length === 0 ? (
-              <li>No entries available.</li>
-            ) : (
-              allEntries.map((entry) => (
+      
+          {allEntries.length === 0 ? (
+            <p>No entries available.</p>
+          ) : (
+            <ul className="list-disc list-inside border rounded p-2 space-y-2">
+              {allEntries.map((entry) => (
                 <li key={entry.id} className="mb-2">
-                  <div>
-                    <strong>{entry.className}</strong> - {entry.subject} - {entry.chapter}
-                  </div>
-                  {entry.image_url && (
-                    <img
-                      src={entry.image_url}
-                      alt={`${entry.subject} image`}
-                      className="w-32 h-32 object-cover mt-1 border rounded"
-                    />
+                  <p><strong>Class:</strong> {entry.className}</p>
+                  <p><strong>Subject:</strong> {entry.subject}</p>
+                  <p><strong>Chapter:</strong> {entry.chapter}</p>
+      
+                  <p><strong>Images:</strong></p>
+                  {entry.image_urls && entry.image_urls.length > 0 ? (
+                    <ul className="list-decimal list-inside ml-4">
+                      {entry.image_urls.map((url, idx) => (
+                        <li key={idx}>{url}</li>   {/* just display text */}
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No images</p>
                   )}
                 </li>
-              ))
-            )}
-          </ul>
+              ))}
+            </ul>
+          )}
         </div>
       )}
+
 
 
     </div>
