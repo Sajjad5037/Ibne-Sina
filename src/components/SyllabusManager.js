@@ -15,7 +15,7 @@ export default function SyllabusManager() {
   const [editSubject, setEditSubject] = useState("");
   const [editChapter, setEditChapter] = useState("");
   const [deleteId, setDeleteId] = useState("");
-  const [allEntries, setAllEntries] = useState([]);
+  
   const API_BASE = "https://usefulapis-production.up.railway.app";
 
   {/* To view all syllabus entries */}
