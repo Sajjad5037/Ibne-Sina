@@ -371,7 +371,7 @@ const handleDelete = async () => {
                   {entry.image_urls && entry.image_urls.length > 0 ? (
                     <ul className="list-decimal list-inside ml-4">
                       {entry.image_urls.map((url, idx) => (
-                        <li key={idx}>{url}</li>   {/* just display text */}
+                        <li key={idx}>{url}</li> 
                       ))}
                     </ul>
                   ) : (
