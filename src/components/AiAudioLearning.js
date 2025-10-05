@@ -244,51 +244,58 @@ const AiAudioLearning = ({ doctorData }) => {
 
   // Send recorded audio
   const handleSendAudio = async () => {
-    if (!sessionId || !doctorData) {
-      alert("Start a conversation first!");
-      return;
+  if (!sessionId || !doctorData) {
+    alert("Start a conversation first!");
+    return;
+  }
+
+  try {
+    // --- Prepare audio blob ---
+    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.webm");
+    formData.append("session_id", sessionId);
+    formData.append("username", doctorData.name);
+    formData.append("id", doctorData.id);
+
+    console.log("🚀 Sending audio:", { size: audioBlob.size, type: audioBlob.type });
+
+    // --- Send to backend ---
+    const response = await fetch(
+      "https://usefulapis-production.up.railway.app/chat_interactive_tutor_Ibne_Sina_audio",
+      { method: "POST", body: formData }
+    );
+
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+    const data = await response.json();
+
+    // --- Play the audio reply ---
+    if (data.audio_url) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = data.audio_url;
+      await audioRef.current.play();
+      console.log("🎵 Playing audio reply:", data.audio_url);
     }
 
-    try {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.webm");
-      formData.append("session_id", sessionId);
-      formData.append("username", doctorData.name);
-      formData.append("id", doctorData.id);
-
-      console.log("🚀 Sending audio:", { size: audioBlob.size, type: audioBlob.type });
-
-      const response = await fetch(
-        "https://usefulapis-production.up.railway.app/send_audio_message",
-        { method: "POST", body: formData }
-      );
-
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-      const data = await response.json();
-
-      if (data.audio_url) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current.src = data.audio_url;
-        await audioRef.current.play();
-      }
-
-      if (data.reply) {
-       setChatLog(prev => [
-         ...prev,
-         { sender: "bot", text: data.reply }
-       ]);
-     }
-
-
-      console.log("📝 Transcription / response:", data);
-    } catch (error) {
-      console.error("❌ Error sending audio:", error);
-      alert("Failed to send audio message.");
+    // --- Update chat log with GPT reply ---
+    if (data.reply) {
+      setChatLog(prev => [
+        ...prev,
+        { sender: "bot", text: data.reply }
+      ]);
+      console.log("💬 GPT reply added to chat log:", data.reply);
     }
-  };
+
+    console.log("📝 Transcription / response received:", data);
+
+  } catch (error) {
+    console.error("❌ Error sending audio:", error);
+    alert("Failed to send audio message.");
+  }
+};
+
 
   const renderSelect = (label, value, setValue, options, disabled = false) => (
     <div className="flex flex-col">
