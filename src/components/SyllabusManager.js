@@ -34,7 +34,7 @@ export default function SyllabusManager() {
   {/* Fetching classname,subject,chapter against id so user can edit syllabus */}
   useEffect(() => {
   if (selectedId) {
-    fetch(`https://usefulapis-production.up.railway.app/api/details/${selectedId}`)
+    fetch(`https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/details/${selectedId}`)
       .then(res => res.json())
       .then(data => {
         setEditClassName(data.className);
