@@ -7,8 +7,35 @@ export default function SyllabusManager() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [images, setImages] = useState([])
-
+  const [ids, setIds] = useState([])
+  const [selectedId, setSelectedId] = useState(""); 
+  const [editClassName, setEditClassName] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editChapter, setEditChapter] = useState("");
   const API_BASE = "https://usefulapis-production.up.railway.app";
+
+  {/* Fetching ids so user can edit syllabus */}
+  useEffect(() => {
+  fetch("http://localhost:5000/api/ids")
+    .then(res => res.json())
+    .then(data => setIds(data))   // data = [{id:1}, {id:2}, ...]
+    .catch(err => console.error("Error fetching IDs:", err));
+}, []);
+
+  {/* Fetching classname,subject,chapter against id so user can edit syllabus */}
+  useEffect(() => {
+  if (selectedId) {
+    fetch(`http://localhost:5000/api/details/${selectedId}`)
+      .then(res => res.json())
+      .then(data => {
+        setEditClassName(data.className);
+        setEditSubject(data.subject);
+        setEditChapter(data.chapter);
+      })
+      .catch(err => console.error("Error fetching details:", err));
+  }
+}, [selectedId]);
+
 
 
   // Handle file input
@@ -138,6 +165,66 @@ export default function SyllabusManager() {
           </button>
         </div>
       )}
+
+      {/* Edit Tab */}
+      {activeTab === "Edit" && (
+        <div>
+          <h3 className="font-semibold mb-2">Edit Syllabus Entry</h3>
+      
+          {/* ID Dropdown */}
+          <label className="block mb-2 font-medium">Select Entry ID</label>
+          <select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="border px-3 py-2 rounded w-full mb-2"
+          >
+            <option value="">Select ID</option>
+            {ids.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.id}
+              </option>
+            ))}
+          </select>
+      
+          {/* Editable Fields */}
+          <input
+            type="text"
+            placeholder="Class"
+            value={editClassName}
+            onChange={(e) => setEditClassName(e.target.value)}
+            className="border px-3 py-2 rounded w-full mb-2"
+          />
+      
+          <input
+            type="text"
+            placeholder="Subject"
+            value={editSubject}
+            onChange={(e) => setEditSubject(e.target.value)}
+            className="border px-3 py-2 rounded w-full mb-2"
+          />
+      
+          <input
+            type="text"
+            placeholder="Chapter"
+            value={editChapter}
+            onChange={(e) => setEditChapter(e.target.value)}
+            className="border px-3 py-2 rounded w-full mb-4"
+          />
+      
+          {/* Update Button */}
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={() => {
+              console.log({ selectedId, editClassName, editSubject, editChapter }); // debug
+              handleEdit(selectedId, editClassName, editSubject, editChapter);
+            }}
+          >
+            Update
+          </button>
+        </div>
+      )}
+
+
 
       {/* Delete Tab */}
       {activeTab === "Delete" && (
