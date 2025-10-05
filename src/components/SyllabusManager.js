@@ -13,6 +13,7 @@ export default function SyllabusManager() {
   const [editClassName, setEditClassName] = useState("");
   const [editSubject, setEditSubject] = useState("");
   const [editChapter, setEditChapter] = useState("");
+  const [deleteId, setDeleteId] = useState("");
   const API_BASE = "https://usefulapis-production.up.railway.app";
 
   {/* Fetching ids so user can edit syllabus */}
@@ -278,11 +279,19 @@ export default function SyllabusManager() {
       {activeTab === "Delete" && (
         <div>
           <h3 className="font-semibold mb-2">Delete Syllabus Entry</h3>
-          <select className="border px-3 py-2 rounded w-full mb-2">
+          <select
+            className="border px-3 py-2 rounded w-full mb-2"
+            value={deleteId}
+            onChange={(e) => setDeleteId(e.target.value)}
+          >
             <option value="" disabled>
               -- Select entry to delete --
             </option>
-            {/* Options to be filled from backend */}
+            {ids.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.id}
+              </option>
+            ))}
           </select>
           <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
             Delete Selected Entry
