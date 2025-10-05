@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import axios from "axios";
 
 export default function SyllabusManager() {
@@ -42,6 +43,40 @@ export default function SyllabusManager() {
   const handleFileChange = (e) => {
     setImages(e.target.files);
   };
+
+  const handleEdit = async (id, className, subject, chapter) => {
+    if (!id) {
+      alert("Please select an ID to update.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`http://localhost:5000/api/edit/${id}`, {
+        method: "PUT", // or "POST" if your backend uses POST for updates
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          className,
+          subject,
+          chapter,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update entry");
+      }
+  
+      const data = await response.json();
+      console.log("Update successful:", data);
+  
+      alert("Entry updated successfully!");
+    } catch (error) {
+      console.error("Error updating entry:", error);
+      alert("Error updating entry. Please try again.");
+    }
+  };
+
 
   const handleAddWithImages = async () => {
     if (!className || !subject || !chapter || images.length === 0) {
