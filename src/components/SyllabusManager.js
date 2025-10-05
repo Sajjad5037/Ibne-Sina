@@ -77,10 +77,10 @@ export default function SyllabusManager() {
   
       const data = await response.json();
       console.log("Update successful:", data);
-      setClassName("")
-      setSubject("")
-      setChapter("")
-      
+      setEditClassName("")
+      setEditSubject("")
+      setEditChapter("")
+
       
   
       alert("Entry updated successfully!");
