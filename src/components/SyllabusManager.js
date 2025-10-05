@@ -9,6 +9,7 @@ export default function SyllabusManager() {
   const [chapter, setChapter] = useState("");
   const [images, setImages] = useState([])
   const [ids, setIds] = useState([])
+  const [allEntries, setAllEntries] = useState([]);
   const [selectedId, setSelectedId] = useState(""); 
   const [editClassName, setEditClassName] = useState("");
   const [editSubject, setEditSubject] = useState("");
@@ -19,13 +20,22 @@ export default function SyllabusManager() {
 
   {/* To view all syllabus entries */}
   useEffect(() => {
-  if (activeTab === "View All") {
-    fetch("https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/all")
-      .then((res) => res.json())
-      .then((data) => setAllEntries(data))
-      .catch((err) => console.error("Error fetching all entries:", err));
-  }
-}, [activeTab]);
+    if (activeTab !== "View All") return;
+  
+    const fetchAllEntries = async () => {
+      try {
+        const res = await fetch("https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/all");
+        if (!res.ok) throw new Error("Failed to fetch entries");
+        const data = await res.json();
+        setAllEntries(data);
+      } catch (err) {
+        console.error("Error fetching all entries:", err);
+      }
+    };
+  
+    fetchAllEntries();
+  }, [activeTab]);
+
   
   {/* Fetching ids so user can edit syllabus */}
   useEffect(() => {
@@ -346,24 +356,29 @@ const handleDelete = async () => {
       {activeTab === "View All" && (
         <div>
           <h3 className="font-semibold mb-2">All Syllabus Entries</h3>
-      
-          {/* Entries List */}
           <ul className="list-disc list-inside border rounded p-2">
             {allEntries.length === 0 ? (
-              <li>Loading entries...</li>
+              <li>No entries available.</li>
             ) : (
               allEntries.map((entry) => (
-                <li key={entry.id}>
-                  <strong>ID:</strong> {entry.id} | 
-                  <strong> Class:</strong> {entry.className} | 
-                  <strong> Subject:</strong> {entry.subject} | 
-                  <strong> Chapter:</strong> {entry.chapter}
+                <li key={entry.id} className="mb-2">
+                  <div>
+                    <strong>{entry.className}</strong> - {entry.subject} - {entry.chapter}
+                  </div>
+                  {entry.image_url && (
+                    <img
+                      src={entry.image_url}
+                      alt={`${entry.subject} image`}
+                      className="w-32 h-32 object-cover mt-1 border rounded"
+                    />
+                  )}
                 </li>
               ))
             )}
           </ul>
         </div>
       )}
+
 
     </div>
   );
