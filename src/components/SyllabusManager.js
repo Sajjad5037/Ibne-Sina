@@ -47,6 +47,35 @@ export default function SyllabusManager() {
 }, [selectedId]);
 
 
+  // Delete handler
+const handleDelete = async () => {
+  if (!deleteId) {
+    alert("Please select an entry to delete.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/${deleteId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete entry");
+    }
+
+    alert("Entry deleted successfully!");
+
+    // Refresh the ID list after deletion
+    setIds(ids.filter((item) => item.id !== parseInt(deleteId)));
+    setDeleteId(""); // reset dropdown
+  } catch (err) {
+    console.error("Error deleting entry:", err);
+    alert("Error deleting entry.");
+  }
+};
 
   // Handle file input
   const handleFileChange = (e) => {
@@ -293,7 +322,10 @@ export default function SyllabusManager() {
               </option>
             ))}
           </select>
-          <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            onClick={handleDelete}
+          >
             Delete Selected Entry
           </button>
         </div>
