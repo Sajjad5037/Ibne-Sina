@@ -14,8 +14,19 @@ export default function SyllabusManager() {
   const [editSubject, setEditSubject] = useState("");
   const [editChapter, setEditChapter] = useState("");
   const [deleteId, setDeleteId] = useState("");
+  const [allEntries, setAllEntries] = useState([]);
   const API_BASE = "https://usefulapis-production.up.railway.app";
 
+  {/* To view all syllabus entries */}
+  useEffect(() => {
+  if (activeTab === "View All") {
+    fetch("https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/all")
+      .then((res) => res.json())
+      .then((data) => setAllEntries(data))
+      .catch((err) => console.error("Error fetching all entries:", err));
+  }
+}, [activeTab]);
+  
   {/* Fetching ids so user can edit syllabus */}
   useEffect(() => {
   fetch("https://usefulapis-production.up.railway.app/api/syllabus_ibne_sina/ids")
@@ -335,11 +346,25 @@ const handleDelete = async () => {
       {activeTab === "View All" && (
         <div>
           <h3 className="font-semibold mb-2">All Syllabus Entries</h3>
+      
+          {/* Entries List */}
           <ul className="list-disc list-inside border rounded p-2">
-            <li>No entries available. Will be loaded from backend later.</li>
+            {allEntries.length === 0 ? (
+              <li>Loading entries...</li>
+            ) : (
+              allEntries.map((entry) => (
+                <li key={entry.id}>
+                  <strong>ID:</strong> {entry.id} | 
+                  <strong> Class:</strong> {entry.className} | 
+                  <strong> Subject:</strong> {entry.subject} | 
+                  <strong> Chapter:</strong> {entry.chapter}
+                </li>
+              ))
+            )}
           </ul>
         </div>
       )}
+
     </div>
   );
 }
