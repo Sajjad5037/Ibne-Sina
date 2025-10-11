@@ -137,13 +137,7 @@ const StudentDashboard = ({ doctorData }) => {
         >
           App Usage
         </Link>
-        <Link
-          to="/StudentDashboard/ResponseAnalyzer"
-          style={styles.navLink(activeLink === "ResponseAnalyzer")}
-          onClick={() => setActiveLink("ResponseAnalyzer")}
-        >
-          Response Analyzer
-        </Link>
+        
       </nav>
       
 
