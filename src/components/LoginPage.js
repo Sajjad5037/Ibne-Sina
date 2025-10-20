@@ -8,12 +8,12 @@ import {
 } from "react-router-dom";
 
 // --- Components ---
-import AdminPanel from "./components/AdminPage";
-import AddDoctor from "./components/AddDoctorPage";
-import EditDoctor from "./components/EditDoctorPage";
-import ViewDoctors from "./components/ViewDoctors";
-import DeleteDoctor from "./components/DeleteDoctor";
-import ChatbotTraining from "./components/ChatbotTraining"; // ✅ new component
+import AdminPanel from "/AdminPage";
+import AddDoctor from "/AddDoctorPage";
+import EditDoctor from "/EditDoctorPage";
+import ViewDoctors from "/ViewDoctors";
+import DeleteDoctor from "/DeleteDoctor";
+import ChatbotTraining from "/ChatbotTraining"; // ✅ new component
 
 // --- Login Page ---
 function LoginPage({ setIsLoggedIn, setDoctorData, setSessionToken }) {
